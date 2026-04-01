@@ -595,8 +595,8 @@ export function UploadPage() {
   return (
     <>
       <Seo
-        title="Print Studio | Printing Shop in Bhopal"
-        description="Upload multiple files, customize print settings per document, and place your Bhopal print order online."
+        title="Print Studio | Printing Shop"
+        description="Upload multiple files, customize print settings per document, and place your print order online."
       />
 
       <section className="py-16 sm:py-20">

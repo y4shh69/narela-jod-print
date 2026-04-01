@@ -469,7 +469,7 @@ export function AdminPage() {
   return (
     <>
       <Seo
-        title="Admin Panel | Printing Shop in Bhopal"
+        title="Admin Panel | Printing Shop"
         description="Manage orders, update print progress, and keep customers informed from the admin panel."
       />
 
@@ -501,14 +501,6 @@ export function AdminPage() {
                 </Button>
               </div>
             </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <SummaryCard icon={PackageCheck} label="Total orders" value={summary.totalOrders} note="All jobs currently recorded." />
-            <SummaryCard icon={CalendarClock} label="Active jobs" value={summary.activeOrders} note="Jobs still in review or production." />
-            <SummaryCard icon={Truck} label="Ready / dispatch" value={summary.readyOrders} note="Orders ready for handoff." />
-            <SummaryCard icon={CheckCheck} label="Delivered" value={summary.deliveredToday} note="Orders already completed." />
-            <SummaryCard icon={Sparkles} label="Order value" value={formatCurrency(summary.totalRevenue)} note="Total value across all orders." />
           </div>
 
           <div className="mt-6">
@@ -577,6 +569,14 @@ export function AdminPage() {
                 </div>
               )}
             </Card>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <SummaryCard icon={PackageCheck} label="Total orders" value={summary.totalOrders} note="All jobs currently recorded." />
+            <SummaryCard icon={CalendarClock} label="Active jobs" value={summary.activeOrders} note="Jobs still in review or production." />
+            <SummaryCard icon={Truck} label="Ready / dispatch" value={summary.readyOrders} note="Orders ready for handoff." />
+            <SummaryCard icon={CheckCheck} label="Delivered" value={summary.deliveredToday} note="Orders already completed." />
+            <SummaryCard icon={Sparkles} label="Order value" value={formatCurrency(summary.totalRevenue)} note="Total value across all orders." />
           </div>
 
           <div className="mt-6">

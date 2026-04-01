@@ -63,7 +63,7 @@ export function TrackOrderPage() {
   return (
     <>
       <Seo
-        title="Track Order | Printing Shop in Bhopal"
+        title="Track Order | Printing Shop"
         description="Track your print order status using the order ID and phone number."
       />
 

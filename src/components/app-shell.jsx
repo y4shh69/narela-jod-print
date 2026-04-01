@@ -1,14 +1,12 @@
-import { Menu, MoonStar, SunMedium, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import logo from "../assets/xeroxwala-logo.jpeg";
 import { navLinks, whatsappNumber } from "../lib/constants";
 import { cn } from "../lib/utils";
-import { useTheme } from "./theme-provider";
 import { Button } from "./ui/button";
 
 export function AppShell({ children }) {
-  const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -63,14 +61,6 @@ export function AppShell({ children }) {
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="rounded-2xl border border-slate-200 bg-white/80 p-3 text-slate-700 shadow-lg shadow-slate-200/60 backdrop-blur transition hover:bg-white dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <SunMedium className="h-5 w-5" /> : <MoonStar className="h-5 w-5" />}
-            </button>
             <Button
               variant="secondary"
               onClick={() => window.open(`https://wa.me/${whatsappNumber}`, "_blank", "noopener,noreferrer")}
@@ -110,9 +100,6 @@ export function AppShell({ children }) {
                 </NavLink>
               ))}
               <div className="mt-2 flex gap-3">
-                <Button variant="outline" className="flex-1" onClick={toggleTheme}>
-                  {theme === "dark" ? "Light mode" : "Dark mode"}
-                </Button>
                 <Button
                   variant="secondary"
                   className="flex-1"
@@ -139,7 +126,7 @@ export function AppShell({ children }) {
                 <p className="text-xl font-semibold text-slate-950 dark:text-white">Xerox Wala</p>
               </div>
               <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-600 dark:text-slate-300">
-                Premium everyday printing for students, offices, and doorstep document delivery across Bhopal.
+                Premium everyday printing for students, offices, and doorstep document delivery across multiple cities.
               </p>
             </div>
             <div className="text-sm font-medium text-slate-600 dark:text-slate-300">

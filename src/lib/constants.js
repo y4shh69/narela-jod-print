@@ -59,7 +59,7 @@ export const highlights = [
   },
   {
     title: "Doorstep delivery",
-    description: "Fast document dispatch across Bhopal with clear timing updates.",
+    description: "Fast document dispatch across cities with clear timing updates.",
     icon: MapPinned,
   },
   {

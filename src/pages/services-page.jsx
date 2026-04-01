@@ -50,7 +50,7 @@ export function ServicesPage() {
   return (
     <>
       <Seo
-        title="Services | Printing Shop in Bhopal"
+        title="Services | Printing Shop"
         description="Explore the full Xerox Wala service catalog and live admin-managed pricing for printing, stationery, cards, gifts, and office materials."
       />
       <section className="py-16 sm:py-20">

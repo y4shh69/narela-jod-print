@@ -34,8 +34,8 @@ export function ContactPage() {
   return (
     <>
       <Seo
-        title="Contact | Printing Shop in Bhopal"
-        description="Contact the Bhopal printing team for orders, timings, WhatsApp help, and delivery details."
+        title="Contact | Printing Shop"
+        description="Contact the printing team for orders, timings, WhatsApp help, and delivery details."
       />
       <section className="py-16 sm:py-20">
         <div className="section-shell">

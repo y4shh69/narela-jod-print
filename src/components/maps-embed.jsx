@@ -13,10 +13,10 @@ export function MapsEmbed() {
               <MapPin className="h-3.5 w-3.5" />
               Shop location
             </div>
-            <h3 className="mt-5 text-2xl font-semibold tracking-tight text-white">Visit Xerox Wala in Bhopal</h3>
+            <h3 className="mt-5 text-2xl font-semibold tracking-tight text-white">Visit Xerox Wala</h3>
             <p className="mt-4 text-sm leading-7 text-white/68">
               Shop No-f-3, Bhavani Tower, above Naman restaurant, Bhawanidham Phase-1, Chhatrapati Nagar, Narela Jod,
-              Ayodhya Nagar, Bhopal, Madhya Pradesh 462041
+              Ayodhya Nagar, Madhya Pradesh 462041
             </p>
           </div>
 

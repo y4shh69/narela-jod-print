@@ -65,8 +65,8 @@ export function HomePage() {
   return (
     <>
       <Seo
-        title="Printing Shop in Bhopal | Fast Printing & Xerox Services"
-        description="Upload files online for premium printing, xerox, binding, lamination, and stationery support in Bhopal."
+        title="Printing Shop | Fast Printing & Xerox Services"
+        description="Upload files online for premium printing, xerox, binding, lamination, and stationery support."
       />
 
       <section className="relative overflow-hidden py-16 sm:py-24">
@@ -76,10 +76,10 @@ export function HomePage() {
             <motion.div initial="hidden" animate="visible" variants={fadeUp}>
               <span className="hero-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                 <Sparkles className="h-4 w-4 text-brand-500" />
-                {siteContent?.bannerLabel || "Modern print workflows for Bhopal"}
+                {siteContent?.bannerLabel || "Modern print workflows for delivery-first teams"}
               </span>
               <h1 className="mt-6 max-w-3xl text-5xl font-extrabold tracking-tight !text-slate-950 sm:text-6xl lg:text-7xl">
-                Fast Printing & Xerox Services in Bhopal
+                Fast Printing & Xerox Services
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 !text-slate-700 dark:!text-slate-300">
                 Upload files, set print preferences, and confirm your order in minutes. Built for students, startups, offices, and urgent same-day jobs.
@@ -309,7 +309,7 @@ export function HomePage() {
           <div className="mt-16">
             <SectionHeading
               eyebrow="Location"
-              title="Fast delivery across Bhopal"
+              title="Fast delivery across cities"
               description="Share your file online and get printed documents delivered once the order is ready."
             />
             <div className="mt-8">
