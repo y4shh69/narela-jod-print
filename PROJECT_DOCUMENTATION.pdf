@@ -1,0 +1,2108 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 1449 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(NARELA JOD PRINT STUDIO) Tj
+T*
+() Tj
+T*
+(Comprehensive project documentation for the stationery and printing shop platform built for) Tj
+T*
+(Bhopal, India.) Tj
+T*
+() Tj
+T*
+(1. PROJECT OVERVIEW) Tj
+T*
+() Tj
+T*
+(This project is a modern startup-style web platform for a stationery and printing shop. It) Tj
+T*
+(combines:) Tj
+T*
+() Tj
+T*
+(? a customer-facing marketing website) Tj
+T*
+(? a multi-document print studio) Tj
+T*
+(? a Spring Boot backend) Tj
+T*
+(? PostgreSQL persistence) Tj
+T*
+(? local file upload and preview handling) Tj
+T*
+(? an admin-facing order review flow) Tj
+T*
+() Tj
+T*
+(The product goal is to let customers:) Tj
+T*
+() Tj
+T*
+(? upload one or more files) Tj
+T*
+(? configure print settings for each file) Tj
+T*
+(? preview supported files before ordering) Tj
+T*
+(? receive live pricing) Tj
+T*
+(? place an order online) Tj
+T*
+() Tj
+T*
+(The long-term direction is a production-ready printing SaaS-like experience with:) Tj
+T*
+() Tj
+T*
+(? payment integration) Tj
+T*
+(? admin authentication) Tj
+T*
+(? cloud file storage) Tj
+T*
+(? office-document conversion) Tj
+T*
+(? richer design/editing tools) Tj
+T*
+() Tj
+T*
+(2. CURRENT TECH STACK) Tj
+T*
+() Tj
+T*
+(FRONTEND) Tj
+T*
+() Tj
+T*
+(? React) Tj
+T*
+(? Vite) Tj
+T*
+(? Tailwind CSS) Tj
+T*
+(? framer-motion) Tj
+T*
+(? lucide-react) Tj
+T*
+(? react-router-dom) Tj
+T*
+(? react-pdf) Tj
+T*
+(? pdfjs-dist) Tj
+T*
+() Tj
+T*
+(BACKEND) Tj
+T*
+() Tj
+T*
+(? Spring Boot) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 1476 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? Spring Web) Tj
+T*
+(? Spring Data JPA) Tj
+T*
+(? Spring Security) Tj
+T*
+(? Spring Validation) Tj
+T*
+(? PostgreSQL) Tj
+T*
+(? Lombok) Tj
+T*
+() Tj
+T*
+(DEVELOPMENT ENVIRONMENT) Tj
+T*
+() Tj
+T*
+(? Node.js for frontend tooling) Tj
+T*
+(? Java 21+ runtime) Tj
+T*
+(? PostgreSQL local instance) Tj
+T*
+(? LibreOffice optional for DOCX/PPTX preview conversion) Tj
+T*
+() Tj
+T*
+(3. CURRENT PROJECT STRUCTURE) Tj
+T*
+() Tj
+T*
+(```text) Tj
+T*
+(D:\\NARELA JOD) Tj
+T*
+(  backend/) Tj
+T*
+(    .mvn/) Tj
+T*
+(    mvnw) Tj
+T*
+(    mvnw.cmd) Tj
+T*
+(    pom.xml) Tj
+T*
+(    src/main/java/com/narelaprint/backend/) Tj
+T*
+(      BackendApplication.java) Tj
+T*
+(      config/) Tj
+T*
+(        JacksonConfig.java) Tj
+T*
+(        SecurityConfig.java) Tj
+T*
+(        WebConfig.java) Tj
+T*
+(      controller/) Tj
+T*
+(        PrintStudioController.java) Tj
+T*
+(      dto/) Tj
+T*
+(        OrderItemResponse.java) Tj
+T*
+(        OrderResponse.java) Tj
+T*
+(        OrdersResponse.java) Tj
+T*
+(        PreviewConversionResponse.java) Tj
+T*
+(        QuoteItemRequest.java) Tj
+T*
+(        QuoteItemResponse.java) Tj
+T*
+(        QuoteRequest.java) Tj
+T*
+(        QuoteResponse.java) Tj
+T*
+(      entity/) Tj
+T*
+(        OrderItem.java) Tj
+T*
+(        PrintOrder.java) Tj
+T*
+(      repository/) Tj
+T*
+(        PrintOrderRepository.java) Tj
+T*
+(      service/) Tj
+T*
+(        OrderService.java) Tj
+T*
+(        PreviewConversionService.java) Tj
+T*
+(        PricingService.java) Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 1248 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(        StorageService.java) Tj
+T*
+(    src/main/resources/) Tj
+T*
+(      application.yml) Tj
+T*
+(  dist/) Tj
+T*
+(  node_modules/) Tj
+T*
+(  public/) Tj
+T*
+(    favicon.svg) Tj
+T*
+(  src/) Tj
+T*
+(    components/) Tj
+T*
+(      app-shell.jsx) Tj
+T*
+(      maps-embed.jsx) Tj
+T*
+(      section-heading.jsx) Tj
+T*
+(      theme-provider.jsx) Tj
+T*
+(      toast-provider.jsx) Tj
+T*
+(      ui/) Tj
+T*
+(        button.jsx) Tj
+T*
+(        card.jsx) Tj
+T*
+(        input.jsx) Tj
+T*
+(        select.jsx) Tj
+T*
+(        skeleton.jsx) Tj
+T*
+(        textarea.jsx) Tj
+T*
+(    lib/) Tj
+T*
+(      constants.js) Tj
+T*
+(      print-studio.js) Tj
+T*
+(      seo.js) Tj
+T*
+(      utils.js) Tj
+T*
+(    pages/) Tj
+T*
+(      admin-page.jsx) Tj
+T*
+(      contact-page.jsx) Tj
+T*
+(      home-page.jsx) Tj
+T*
+(      services-page.jsx) Tj
+T*
+(      upload-page.jsx) Tj
+T*
+(    App.jsx) Tj
+T*
+(    main.jsx) Tj
+T*
+(    styles.css) Tj
+T*
+(  index.html) Tj
+T*
+(  package.json) Tj
+T*
+(  package-lock.json) Tj
+T*
+(  README.md) Tj
+T*
+(  vite.config.js) Tj
+T*
+(  PROJECT_DOCUMENTATION.md) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(4. FRONTEND APPLICATION DETAILS) Tj
+T*
+() Tj
+T*
+(4.1 APP SHELL AND ROUTING) Tj
+T*
+() Tj
+T*
+(Frontend entry files:) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Length 1332 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? src/main.jsx) Tj
+T*
+(? src/App.jsx) Tj
+T*
+() Tj
+T*
+(The app uses BrowserRouter and renders routes inside a shared shell.) Tj
+T*
+() Tj
+T*
+(Routes currently available:) Tj
+T*
+() Tj
+T*
+(? / homepage) Tj
+T*
+(? /services services page) Tj
+T*
+(? /upload print studio / upload page) Tj
+T*
+(? /contact contact page) Tj
+T*
+(? /admin admin dashboard) Tj
+T*
+() Tj
+T*
+(4.2 SHARED LAYOUT) Tj
+T*
+() Tj
+T*
+(Layout and global wrappers:) Tj
+T*
+() Tj
+T*
+(? src/components/app-shell.jsx) Tj
+T*
+(? src/components/theme-provider.jsx) Tj
+T*
+(? src/components/toast-provider.jsx) Tj
+T*
+() Tj
+T*
+(Implemented features:) Tj
+T*
+() Tj
+T*
+(? sticky navbar) Tj
+T*
+(? responsive mobile navigation) Tj
+T*
+(? dark/light mode toggle) Tj
+T*
+(? shared footer) Tj
+T*
+(? toast notifications) Tj
+T*
+() Tj
+T*
+(4.3 STYLING SYSTEM) Tj
+T*
+() Tj
+T*
+(Global theme and visual design:) Tj
+T*
+() Tj
+T*
+(? src/styles.css) Tj
+T*
+() Tj
+T*
+(Current design characteristics:) Tj
+T*
+() Tj
+T*
+(? premium gradient background) Tj
+T*
+(? glassmorphism panels and buttons) Tj
+T*
+(? high-contrast typography) Tj
+T*
+(? modern rounded corners) Tj
+T*
+(? light and dark mode support) Tj
+T*
+() Tj
+T*
+(4.4 SHARED UI PRIMITIVES) Tj
+T*
+() Tj
+T*
+(Reusable UI components:) Tj
+T*
+() Tj
+T*
+(? src/components/ui/button.jsx) Tj
+T*
+(? src/components/ui/card.jsx) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Length 1095 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? src/components/ui/input.jsx) Tj
+T*
+(? src/components/ui/select.jsx) Tj
+T*
+(? src/components/ui/textarea.jsx) Tj
+T*
+(? src/components/ui/skeleton.jsx) Tj
+T*
+() Tj
+T*
+(These components give:) Tj
+T*
+() Tj
+T*
+(? consistent styling) Tj
+T*
+(? reusable glass look) Tj
+T*
+(? consistent spacing and rounding) Tj
+T*
+(? easier future refactoring) Tj
+T*
+() Tj
+T*
+(5. PAGES AND FEATURE BREAKDOWN) Tj
+T*
+() Tj
+T*
+(5.1 HOMEPAGE) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/pages/home-page.jsx) Tj
+T*
+() Tj
+T*
+(Features:) Tj
+T*
+() Tj
+T*
+(? hero section) Tj
+T*
+(? CTA buttons) Tj
+T*
+(? services highlights) Tj
+T*
+(? how-it-works section) Tj
+T*
+(? testimonials) Tj
+T*
+(? map embed) Tj
+T*
+(? animated sections) Tj
+T*
+() Tj
+T*
+(5.2 SERVICES PAGE) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/pages/services-page.jsx) Tj
+T*
+() Tj
+T*
+(Features:) Tj
+T*
+() Tj
+T*
+(? service cards) Tj
+T*
+(? pricing display) Tj
+T*
+(? visual service categories) Tj
+T*
+() Tj
+T*
+(5.3 CONTACT PAGE) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/pages/contact-page.jsx) Tj
+T*
+() Tj
+T*
+(Features:) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Length 1258 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+() Tj
+T*
+(? contact form UI) Tj
+T*
+(? address and timings) Tj
+T*
+(? WhatsApp CTA) Tj
+T*
+(? map embed) Tj
+T*
+() Tj
+T*
+(5.4 ADMIN PAGE) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/pages/admin-page.jsx) Tj
+T*
+() Tj
+T*
+(Features:) Tj
+T*
+() Tj
+T*
+(? fetches orders from backend) Tj
+T*
+(? displays customer details) Tj
+T*
+(? displays multi-document order items) Tj
+T*
+(? shows total amounts) Tj
+T*
+(? download links for files) Tj
+T*
+(? loading skeletons) Tj
+T*
+() Tj
+T*
+(Current limitation:) Tj
+T*
+() Tj
+T*
+(? no admin authentication yet) Tj
+T*
+(? admin route is not protected) Tj
+T*
+() Tj
+T*
+(5.5 PRINT STUDIO PAGE) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/pages/upload-page.jsx) Tj
+T*
+() Tj
+T*
+(This is the core feature of the project.) Tj
+T*
+() Tj
+T*
+(Implemented features:) Tj
+T*
+() Tj
+T*
+(? multi-file upload) Tj
+T*
+(? drag and drop upload area) Tj
+T*
+(? explicit file picker button) Tj
+T*
+(? document list sidebar) Tj
+T*
+(? per-document settings) Tj
+T*
+(? customer details collection) Tj
+T*
+(? live pricing via backend quote API) Tj
+T*
+(? PDF preview) Tj
+T*
+(? image preview) Tj
+T*
+(? PDF page thumbnails) Tj
+T*
+(? PDF page selection) Tj
+T*
+(? page range updates) Tj
+T*
+(? WhatsApp deep link for order summary) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Length 1150 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? order submission to backend) Tj
+T*
+() Tj
+T*
+(Current per-document settings:) Tj
+T*
+() Tj
+T*
+(? color mode) Tj
+T*
+(? paper size) Tj
+T*
+(? orientation) Tj
+T*
+(? page count) Tj
+T*
+(? copies) Tj
+T*
+(? print side) Tj
+T*
+(? binding) Tj
+T*
+(? page range) Tj
+T*
+(? scaling) Tj
+T*
+(? lamination) Tj
+T*
+(? notes) Tj
+T*
+() Tj
+T*
+(Preview behavior:) Tj
+T*
+() Tj
+T*
+(? PDF renders in preview area using react-pdf) Tj
+T*
+(? JPG/PNG renders as image preview) Tj
+T*
+(? DOC/DOCX/PPT/PPTX can be converted to PDF if LibreOffice is installed) Tj
+T*
+() Tj
+T*
+(Current limitations:) Tj
+T*
+() Tj
+T*
+(? no true content editing inside PDF/DOCX/PPTX) Tj
+T*
+(? no crop/rotate/image editing tools yet) Tj
+T*
+(? no persistent draft save) Tj
+T*
+() Tj
+T*
+(6. FRONTEND UTILITY FILES) Tj
+T*
+() Tj
+T*
+(6.1 CONSTANTS) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/lib/constants.js) Tj
+T*
+() Tj
+T*
+(Contains:) Tj
+T*
+() Tj
+T*
+(? nav links) Tj
+T*
+(? services list) Tj
+T*
+(? testimonials) Tj
+T*
+(? highlights) Tj
+T*
+(? WhatsApp number) Tj
+T*
+() Tj
+T*
+(6.2 PRINT STUDIO HELPERS) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/lib/print-studio.js) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Length 1054 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+() Tj
+T*
+(Contains:) Tj
+T*
+() Tj
+T*
+(? file type mappings) Tj
+T*
+(? preview mode logic) Tj
+T*
+(? default document settings) Tj
+T*
+(? document item creation) Tj
+T*
+(? quote payload generation) Tj
+T*
+(? WhatsApp message builder) Tj
+T*
+() Tj
+T*
+(6.3 SHARED UTILS) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/lib/utils.js) Tj
+T*
+() Tj
+T*
+(Contains:) Tj
+T*
+() Tj
+T*
+(? class name combiner) Tj
+T*
+(? currency formatting) Tj
+T*
+(? date formatting) Tj
+T*
+(? file type formatting) Tj
+T*
+() Tj
+T*
+(6.4 SEO HELPER) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? src/lib/seo.js) Tj
+T*
+() Tj
+T*
+(Updates:) Tj
+T*
+() Tj
+T*
+(? page title) Tj
+T*
+(? meta description) Tj
+T*
+() Tj
+T*
+(7. BACKEND ARCHITECTURE) Tj
+T*
+() Tj
+T*
+(The backend is now a Spring Boot application and is the primary backend for the system.) Tj
+T*
+() Tj
+T*
+(Entry file:) Tj
+T*
+() Tj
+T*
+(? BackendApplication.java) Tj
+T*
+() Tj
+T*
+(7.1 CONFIGURATION) Tj
+T*
+() Tj
+T*
+(Files:) Tj
+T*
+() Tj
+T*
+(? application.yml) Tj
+T*
+(? SecurityConfig.java) Tj
+T*
+(? WebConfig.java) Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Length 1155 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? JacksonConfig.java) Tj
+T*
+() Tj
+T*
+(Current configuration:) Tj
+T*
+() Tj
+T*
+(? backend runs on port 8080) Tj
+T*
+(? frontend dev origin http://localhost:5173 is allowed) Tj
+T*
+(? security is currently permissive for development) Tj
+T*
+(? uploads are served under /uploads/**) Tj
+T*
+(? PostgreSQL is configured through env variables with local defaults) Tj
+T*
+() Tj
+T*
+(Current default DB config:) Tj
+T*
+() Tj
+T*
+(? database: narela_print) Tj
+T*
+(? username: postgres) Tj
+T*
+(? password: postgres) Tj
+T*
+() Tj
+T*
+(These are only safe for local development.) Tj
+T*
+() Tj
+T*
+(7.2 ENTITIES) Tj
+T*
+() Tj
+T*
+(Files:) Tj
+T*
+() Tj
+T*
+(? PrintOrder.java) Tj
+T*
+(? OrderItem.java) Tj
+T*
+() Tj
+T*
+(#### PrintOrder fields) Tj
+T*
+() Tj
+T*
+(? id) Tj
+T*
+(? publicId) Tj
+T*
+(? name) Tj
+T*
+(? phone) Tj
+T*
+(? address) Tj
+T*
+(? notes) Tj
+T*
+(? itemCount) Tj
+T*
+(? totalAmount) Tj
+T*
+(? createdAt) Tj
+T*
+(? items) Tj
+T*
+() Tj
+T*
+(#### OrderItem fields) Tj
+T*
+() Tj
+T*
+(? id) Tj
+T*
+(? order) Tj
+T*
+(? tempId) Tj
+T*
+(? displayName) Tj
+T*
+(? fileType) Tj
+T*
+(? colorMode) Tj
+T*
+(? paperSize) Tj
+T*
+(? orientation) Tj
+T*
+(? printSide) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Length 1006 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? pages) Tj
+T*
+(? printablePages) Tj
+T*
+(? copies) Tj
+T*
+(? pageRange) Tj
+T*
+(? bindingType) Tj
+T*
+(? lamination) Tj
+T*
+(? scaleType) Tj
+T*
+(? notes) Tj
+T*
+(? unitPrice) Tj
+T*
+(? totalPrice) Tj
+T*
+(? fileName) Tj
+T*
+(? fileUrl) Tj
+T*
+() Tj
+T*
+(7.3 REPOSITORY) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? PrintOrderRepository.java) Tj
+T*
+() Tj
+T*
+(Current responsibility:) Tj
+T*
+() Tj
+T*
+(? basic JPA persistence for orders) Tj
+T*
+() Tj
+T*
+(7.4 DTOS) Tj
+T*
+() Tj
+T*
+(Files in:) Tj
+T*
+() Tj
+T*
+(? backend/src/main/java/com/narelaprint/backend/dto) Tj
+T*
+() Tj
+T*
+(These DTOs define request/response shapes for:) Tj
+T*
+() Tj
+T*
+(? quote requests) Tj
+T*
+(? quote responses) Tj
+T*
+(? orders) Tj
+T*
+(? order items) Tj
+T*
+(? preview conversion) Tj
+T*
+() Tj
+T*
+(7.5 SERVICES) Tj
+T*
+() Tj
+T*
+(#### PricingService) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? PricingService.java) Tj
+T*
+() Tj
+T*
+(Responsibility:) Tj
+T*
+() Tj
+T*
+(? calculates per-item and order pricing) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+12 0 obj
+<< /Length 1181 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(Pricing logic currently considers:) Tj
+T*
+() Tj
+T*
+(? page count) Tj
+T*
+(? copies) Tj
+T*
+(? color mode) Tj
+T*
+(? paper size) Tj
+T*
+(? single/double side) Tj
+T*
+(? lamination) Tj
+T*
+(? binding type) Tj
+T*
+(? selected page range) Tj
+T*
+() Tj
+T*
+(#### StorageService) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? StorageService.java) Tj
+T*
+() Tj
+T*
+(Responsibility:) Tj
+T*
+() Tj
+T*
+(? stores uploaded files on local disk) Tj
+T*
+(? exposes upload paths) Tj
+T*
+(? creates upload/previews folders) Tj
+T*
+() Tj
+T*
+(Current storage mode:) Tj
+T*
+() Tj
+T*
+(? local filesystem only) Tj
+T*
+() Tj
+T*
+(#### PreviewConversionService) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? PreviewConversionService.java) Tj
+T*
+() Tj
+T*
+(Responsibility:) Tj
+T*
+() Tj
+T*
+(? converts Office files to PDF previews using LibreOffice) Tj
+T*
+() Tj
+T*
+(Important dependency:) Tj
+T*
+() Tj
+T*
+(? requires soffice to be installed and available in PATH, or SOFFICE_PATH to be configured) Tj
+T*
+() Tj
+T*
+(Current limitation:) Tj
+T*
+() Tj
+T*
+(? if LibreOffice is not installed, conversion will fail with a clear error) Tj
+T*
+() Tj
+T*
+(#### OrderService) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Length 1054 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? OrderService.java) Tj
+T*
+() Tj
+T*
+(Responsibility:) Tj
+T*
+() Tj
+T*
+(? parses item payload JSON) Tj
+T*
+(? stores uploaded files) Tj
+T*
+(? calculates final item pricing) Tj
+T*
+(? creates orders and order items) Tj
+T*
+(? fetches order list) Tj
+T*
+() Tj
+T*
+(7.6 CONTROLLER) Tj
+T*
+() Tj
+T*
+(File:) Tj
+T*
+() Tj
+T*
+(? PrintStudioController.java) Tj
+T*
+() Tj
+T*
+(Current API endpoints:) Tj
+T*
+() Tj
+T*
+(? POST /api/quote) Tj
+T*
+(? GET /api/orders) Tj
+T*
+(? POST /api/orders) Tj
+T*
+(? POST /api/preview/convert) Tj
+T*
+() Tj
+T*
+(8. API DETAILS) Tj
+T*
+() Tj
+T*
+(8.1 QUOTE API) Tj
+T*
+() Tj
+T*
+(Endpoint:) Tj
+T*
+() Tj
+T*
+(? POST /api/quote) Tj
+T*
+() Tj
+T*
+(Purpose:) Tj
+T*
+() Tj
+T*
+(? returns live item pricing and total amount) Tj
+T*
+() Tj
+T*
+(Frontend usage:) Tj
+T*
+() Tj
+T*
+(? called automatically when document settings change) Tj
+T*
+() Tj
+T*
+(8.2 ORDERS API) Tj
+T*
+() Tj
+T*
+(Endpoints:) Tj
+T*
+() Tj
+T*
+(? GET /api/orders) Tj
+T*
+(? POST /api/orders) Tj
+T*
+() Tj
+T*
+(Purpose:) Tj
+T*
+() Tj
+T*
+(? fetch admin order list) Tj
+ET
+endstream
+endobj
+14 0 obj
+<< /Length 1074 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? create a new customer order) Tj
+T*
+() Tj
+T*
+(8.3 PREVIEW CONVERSION API) Tj
+T*
+() Tj
+T*
+(Endpoint:) Tj
+T*
+() Tj
+T*
+(? POST /api/preview/convert) Tj
+T*
+() Tj
+T*
+(Purpose:) Tj
+T*
+() Tj
+T*
+(? upload an Office document) Tj
+T*
+(? convert it to PDF preview) Tj
+T*
+(? return preview URL) Tj
+T*
+() Tj
+T*
+(Supported conversion targets:) Tj
+T*
+() Tj
+T*
+(? DOC) Tj
+T*
+(? DOCX) Tj
+T*
+(? PPT) Tj
+T*
+(? PPTX) Tj
+T*
+() Tj
+T*
+(9. DATABASE DETAILS) Tj
+T*
+() Tj
+T*
+(Current DB:) Tj
+T*
+() Tj
+T*
+(? PostgreSQL) Tj
+T*
+() Tj
+T*
+(Expected local database:) Tj
+T*
+() Tj
+T*
+(? narela_print) Tj
+T*
+() Tj
+T*
+(Current persistence behavior:) Tj
+T*
+() Tj
+T*
+(? JPA/Hibernate) Tj
+T*
+(? schema auto-update through ddl-auto: update) Tj
+T*
+() Tj
+T*
+(Important note:) Tj
+T*
+() Tj
+T*
+(This is acceptable for development but not production.) Tj
+T*
+() Tj
+T*
+(For production, this should be replaced with:) Tj
+T*
+() Tj
+T*
+(? Flyway migrations) Tj
+T*
+(? explicit schema management) Tj
+T*
+() Tj
+T*
+(10. BUILD AND RUN INSTRUCTIONS) Tj
+T*
+() Tj
+T*
+(10.1 FRONTEND) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Length 1045 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(Install dependencies:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(npm install) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(Run frontend:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(npm run dev) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(Build frontend:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(npm run build) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(10.2 BACKEND) Tj
+T*
+() Tj
+T*
+(Run backend:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(npm run backend) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(Build backend:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(cd backend) Tj
+T*
+(mvnw.cmd -DskipTests package) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(10.3 REQUIRED ENVIRONMENT VARIABLES FOR LOCAL BACKEND) Tj
+T*
+() Tj
+T*
+(In PowerShell:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+($env:DB_URL="jdbc:postgresql://localhost:5432/narela_print") Tj
+T*
+($env:DB_USERNAME="postgres") Tj
+T*
+($env:DB_PASSWORD="your_password") Tj
+T*
+($env:SOFFICE_PATH="C:\\Program Files\\LibreOffice\\program\\soffice.exe") Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(Then run:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(npm run backend) Tj
+T*
+(```) Tj
+ET
+endstream
+endobj
+16 0 obj
+<< /Length 1382 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+() Tj
+T*
+(11. CURRENT SETUP STATUS) Tj
+T*
+() Tj
+T*
+(WORKING NOW) Tj
+T*
+() Tj
+T*
+(? React frontend builds) Tj
+T*
+(? Spring Boot backend builds) Tj
+T*
+(? PostgreSQL connectivity works when credentials are correct) Tj
+T*
+(? quote API exists) Tj
+T*
+(? order creation API exists) Tj
+T*
+(? admin fetch API exists) Tj
+T*
+(? file upload path exists) Tj
+T*
+(? PDF preview exists) Tj
+T*
+(? image preview exists) Tj
+T*
+(? PDF thumbnails and page selection exist) Tj
+T*
+() Tj
+T*
+(PARTIALLY COMPLETE) Tj
+T*
+() Tj
+T*
+(? DOCX/PPTX preview conversion) Tj
+T*
+() Tj
+T*
+(The code is present, but actual conversion requires LibreOffice installation.) Tj
+T*
+() Tj
+T*
+(NOT YET COMPLETE) Tj
+T*
+() Tj
+T*
+(? payment gateway) Tj
+T*
+(? admin authentication) Tj
+T*
+(? customer login) Tj
+T*
+(? cloud file storage) Tj
+T*
+(? production migrations) Tj
+T*
+(? audit logging) Tj
+T*
+(? email/WhatsApp notifications from backend) Tj
+T*
+(? true document editing) Tj
+T*
+(? full design studio) Tj
+T*
+() Tj
+T*
+(12. FEATURE INVENTORY) Tj
+T*
+() Tj
+T*
+(ALREADY IMPLEMENTED) Tj
+T*
+() Tj
+T*
+(? marketing website) Tj
+T*
+(? responsive layout) Tj
+T*
+(? dark/light mode) Tj
+T*
+(? multi-document upload) Tj
+T*
+(? print settings per document) Tj
+T*
+(? live pricing) Tj
+T*
+(? admin order listing) Tj
+T*
+(? PDF/image preview) Tj
+T*
+(? PDF page selection) Tj
+T*
+(? WhatsApp order link) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Length 1482 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(PLANNED / RECOMMENDED NEXT FEATURES) Tj
+T*
+() Tj
+T*
+(? payment gateway integration) Tj
+T*
+(? admin auth) Tj
+T*
+(? order status workflow) Tj
+T*
+(? database migrations) Tj
+T*
+(? cloud storage) Tj
+T*
+(? template editor for posters/cards/resumes) Tj
+T*
+(? invoice generation) Tj
+T*
+(? customer order tracking) Tj
+T*
+() Tj
+T*
+(13. KNOWN LIMITATIONS AND TECHNICAL DEBT) Tj
+T*
+() Tj
+T*
+(FRONTEND) Tj
+T*
+() Tj
+T*
+(? upload page is currently a large component and should be split into smaller reusable) Tj
+T*
+(  components) Tj
+T*
+(? PDF preview increases bundle size significantly) Tj
+T*
+(? no dedicated frontend API abstraction layer yet) Tj
+T*
+() Tj
+T*
+(BACKEND) Tj
+T*
+() Tj
+T*
+(? security currently permits all requests) Tj
+T*
+(? no Flyway) Tj
+T*
+(? no DTO validation annotations yet) Tj
+T*
+(? no central exception handler) Tj
+T*
+(? local disk storage only) Tj
+T*
+(? no tests) Tj
+T*
+() Tj
+T*
+(INFRASTRUCTURE) Tj
+T*
+() Tj
+T*
+(? no deployment config included) Tj
+T*
+(? no Docker setup) Tj
+T*
+(? no monitoring) Tj
+T*
+(? no secrets management strategy) Tj
+T*
+() Tj
+T*
+(14. PRODUCTION READINESS GAPS) Tj
+T*
+() Tj
+T*
+(To make this project production ready, the following should be done:) Tj
+T*
+() Tj
+T*
+(BACKEND HARDENING) Tj
+T*
+() Tj
+T*
+(? add Flyway) Tj
+T*
+(? add authentication and authorization) Tj
+T*
+(? add DTO validation) Tj
+T*
+(? add global exception handling) Tj
+T*
+(? add logging and tracing) Tj
+T*
+(? add actuator health endpoint) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+18 0 obj
+<< /Length 1391 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(INFRASTRUCTURE) Tj
+T*
+() Tj
+T*
+(? move uploads to S3 or Cloudinary) Tj
+T*
+(? move secrets to env vars only) Tj
+T*
+(? deploy PostgreSQL on managed infra) Tj
+T*
+(? add backups) Tj
+T*
+(? add HTTPS and domain setup) Tj
+T*
+() Tj
+T*
+(BUSINESS FEATURES) Tj
+T*
+() Tj
+T*
+(? add Razorpay) Tj
+T*
+(? add order status updates) Tj
+T*
+(? add invoice/receipt support) Tj
+T*
+(? add admin actions) Tj
+T*
+() Tj
+T*
+(15. RECOMMENDED PRODUCTION STACK) Tj
+T*
+() Tj
+T*
+(? frontend: Vercel) Tj
+T*
+(? backend: Render, Railway, AWS, or VPS) Tj
+T*
+(? database: Neon, Supabase, Railway Postgres, or AWS RDS) Tj
+T*
+(? file storage: Cloudinary or AWS S3) Tj
+T*
+(? payment: Razorpay) Tj
+T*
+(? document conversion: LibreOffice-enabled server or conversion worker) Tj
+T*
+() Tj
+T*
+(16. SUGGESTED ROADMAP) Tj
+T*
+() Tj
+T*
+(PHASE 1) Tj
+T*
+() Tj
+T*
+(? stabilize current Spring Boot runtime) Tj
+T*
+(? install LibreOffice) Tj
+T*
+(? verify Office conversion) Tj
+T*
+(? split upload page into smaller components) Tj
+T*
+() Tj
+T*
+(PHASE 2) Tj
+T*
+() Tj
+T*
+(? add Flyway) Tj
+T*
+(? add Spring Security admin auth) Tj
+T*
+(? add order status fields) Tj
+T*
+() Tj
+T*
+(PHASE 3) Tj
+T*
+() Tj
+T*
+(? integrate Razorpay) Tj
+T*
+(? protect admin pages) Tj
+T*
+(? add payment status handling) Tj
+T*
+() Tj
+T*
+(PHASE 4) Tj
+T*
+() Tj
+T*
+(? migrate uploads to cloud storage) Tj
+T*
+(? add better conversion pipeline) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Length 1086 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? add admin workflow improvements) Tj
+T*
+() Tj
+T*
+(PHASE 5) Tj
+T*
+() Tj
+T*
+(? add custom template design editor) Tj
+T*
+(? add customer order tracking) Tj
+T*
+(? production deployment) Tj
+T*
+() Tj
+T*
+(17. CURRENT COMMANDS REFERENCE) Tj
+T*
+() Tj
+T*
+(Frontend install:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(npm install) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(Frontend dev:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(npm run dev) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(Backend dev:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(npm run backend) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(Backend build:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(cd backend) Tj
+T*
+(mvnw.cmd -DskipTests package) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(Create database:) Tj
+T*
+() Tj
+T*
+(```powershell) Tj
+T*
+(& "C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe" -U postgres -d postgres -c "CREATE DATABASE) Tj
+T*
+(narela_print;") Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(18. IMPORTANT LOCAL DEPENDENCIES) Tj
+T*
+() Tj
+T*
+(You need these installed locally for full functionality:) Tj
+T*
+() Tj
+T*
+(? PostgreSQL) Tj
+T*
+(? Java) Tj
+T*
+(? Node.js) Tj
+ET
+endstream
+endobj
+20 0 obj
+<< /Length 1070 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 792 Tm
+15 TL
+(? LibreOffice for Office preview conversion) Tj
+T*
+() Tj
+T*
+(19. IMPORTANT FILES TO KNOW FIRST) Tj
+T*
+() Tj
+T*
+(If someone new joins this project, the first files to read should be:) Tj
+T*
+() Tj
+T*
+(? PROJECT_DOCUMENTATION.md) Tj
+T*
+(? README.md) Tj
+T*
+(? src/pages/upload-page.jsx) Tj
+T*
+(? backend/src/main/java/com/narelaprint/backend/controller/PrintStudioController.java) Tj
+T*
+(? backend/src/main/java/com/narelaprint/backend/service/OrderService.java) Tj
+T*
+(? backend/src/main/java/com/narelaprint/backend/service/PricingService.java) Tj
+T*
+(? backend/src/main/resources/application.yml) Tj
+T*
+() Tj
+T*
+(20. SUMMARY) Tj
+T*
+() Tj
+T*
+(This project is now a serious foundation rather than a throwaway prototype.) Tj
+T*
+() Tj
+T*
+(It already has:) Tj
+T*
+() Tj
+T*
+(? a real frontend) Tj
+T*
+(? a real backend) Tj
+T*
+(? a real database path) Tj
+T*
+(? upload and quote workflows) Tj
+T*
+(? preview support) Tj
+T*
+(? admin listing) Tj
+T*
+() Tj
+T*
+(What remains is mostly product hardening and advanced features, not basic setup.) Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+22 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 3 0 R >>
+endobj
+23 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+24 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 5 0 R >>
+endobj
+25 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+26 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 7 0 R >>
+endobj
+27 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+28 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 9 0 R >>
+endobj
+29 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+30 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 11 0 R >>
+endobj
+31 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
+endobj
+32 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 13 0 R >>
+endobj
+33 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
+endobj
+34 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 15 0 R >>
+endobj
+35 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 16 0 R >>
+endobj
+36 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 17 0 R >>
+endobj
+37 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 18 0 R >>
+endobj
+38 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 19 0 R >>
+endobj
+39 0 obj
+<< /Type /Page /Parent 40 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 20 0 R >>
+endobj
+40 0 obj
+<< /Type /Pages /Kids [ 21 0 R 22 0 R 23 0 R 24 0 R 25 0 R 26 0 R 27 0 R 28 0 R 29 0 R 30 0 R 31 0 R 32 0 R 33 0 R 34 0 R 35 0 R 36 0 R 37 0 R 38 0 R 39 0 R ] /Count 19 >>
+endobj
+41 0 obj
+<< /Type /Catalog /Pages 40 0 R >>
+endobj
+xref
+0 42
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000001586 00000 n 
+0000003114 00000 n 
+0000004414 00000 n 
+0000005798 00000 n 
+0000006945 00000 n 
+0000008255 00000 n 
+0000009457 00000 n 
+0000010563 00000 n 
+0000011771 00000 n 
+0000012830 00000 n 
+0000014064 00000 n 
+0000015171 00000 n 
+0000016298 00000 n 
+0000017396 00000 n 
+0000018831 00000 n 
+0000020366 00000 n 
+0000021810 00000 n 
+0000022949 00000 n 
+0000024072 00000 n 
+0000024200 00000 n 
+0000024328 00000 n 
+0000024456 00000 n 
+0000024584 00000 n 
+0000024712 00000 n 
+0000024840 00000 n 
+0000024968 00000 n 
+0000025096 00000 n 
+0000025225 00000 n 
+0000025354 00000 n 
+0000025483 00000 n 
+0000025612 00000 n 
+0000025741 00000 n 
+0000025870 00000 n 
+0000025999 00000 n 
+0000026128 00000 n 
+0000026257 00000 n 
+0000026386 00000 n 
+0000026515 00000 n 
+0000026703 00000 n 
+trailer
+<< /Size 42 /Root 41 0 R >>
+startxref
+26754
+%%EOF
