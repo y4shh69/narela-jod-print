@@ -3,11 +3,11 @@ import { createContext, useContext, useEffect, useMemo } from "react";
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  const theme = "dark";
+  const theme = "light";
 
   useEffect(() => {
-    document.documentElement.classList.add("dark");
-    localStorage.setItem("theme", "dark");
+    document.documentElement.classList.remove("dark");
+    localStorage.setItem("theme", "light");
   }, [theme]);
 
   const value = useMemo(

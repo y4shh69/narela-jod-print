@@ -49,43 +49,43 @@ export function AdminLoginPage() {
       <section className="py-14 sm:py-18">
         <div className="section-shell">
           <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <Card className="border-white/16 bg-[linear-gradient(145deg,rgba(8,24,56,0.94),rgba(8,50,98,0.82))] p-8 text-white shadow-[0_30px_80px_rgba(2,8,23,0.28)]">
+            <Card className="admin-hero p-8 text-slate-900 shadow-[0_30px_70px_rgba(148,75,37,0.16)]">
               <AdminAccessBadge />
-              <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Secure admin workspace login</h1>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-white/72">
+              <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Secure admin workspace login</h1>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-700">
                 Sign in to manage the order queue, update delivery stages, publish daily homepage updates, and control service pricing.
               </p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/12 bg-white/8 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/46">Protected actions</p>
-                  <p className="mt-3 text-sm leading-7 text-white/78">Orders, status changes, homepage updates, and catalog pricing are only available after login.</p>
+                <div className="admin-soft-panel rounded-2xl p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Protected actions</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-700">Orders, status changes, homepage updates, and catalog pricing are only available after login.</p>
                 </div>
-                <div className="rounded-2xl border border-white/12 bg-white/8 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/46">Session-based access</p>
-                  <p className="mt-3 text-sm leading-7 text-white/78">Your admin session stays active in the browser until you sign out or the session expires.</p>
+                <div className="admin-soft-panel rounded-2xl p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Session-based access</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-700">Your admin session stays active in the browser until you sign out or the session expires.</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="border-white/16 bg-slate-950/76 p-8 text-white shadow-[0_24px_60px_rgba(2,8,23,0.24)]">
+            <Card className="admin-panel p-8 text-slate-900 shadow-[0_24px_60px_rgba(148,75,37,0.14)]">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/16 text-brand-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300/70 via-orange-200/80 to-rose-200/80 text-orange-700 shadow-[0_12px_28px_rgba(249,115,22,0.16)]">
                   <ShieldCheck className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">Admin login</p>
-                  <p className="mt-1 text-sm text-white/64">Use your internal credentials to continue.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">Admin login</p>
+                  <p className="mt-1 text-sm text-slate-600">Use your internal credentials to continue.</p>
                 </div>
               </div>
 
               <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-white/84">Username</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">Username</label>
                   <Input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Enter admin username" autoComplete="username" />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-white/84">Password</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">Password</label>
                   <Input
                     type="password"
                     value={password}

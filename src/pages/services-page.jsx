@@ -5,7 +5,7 @@ import { Card } from "../components/ui/card";
 import { Skeleton } from "../components/ui/skeleton";
 import { useToast } from "../components/toast-provider";
 import { Seo } from "../lib/seo";
-import { getServiceIcon, getServiceThumbnail, groupServicesByCategory } from "../lib/service-catalog";
+import { getServiceIcon, groupServicesByCategory } from "../lib/service-catalog";
 
 export function ServicesPage() {
   const [catalog, setCatalog] = useState([]);
@@ -97,18 +97,10 @@ export function ServicesPage() {
                         >
                           <div className="service-card flex h-full flex-col justify-between rounded-2xl p-6 transition duration-300 hover:-translate-y-1 hover:scale-[1.01]">
                             <div>
-                              <div className="overflow-hidden rounded-2xl border border-white/14">
-                                <img
-                                  src={getServiceThumbnail(item)}
-                                  alt={item.title}
-                                  className="h-48 w-full object-cover"
-                                  loading="lazy"
-                                />
-                              </div>
                               <div className="flex items-start justify-between gap-3">
-                                <Icon className="mt-5 h-8 w-8 text-brand-500" />
+                                <Icon className="h-8 w-8 text-brand-500" />
                                 {item.featured ? (
-                                  <span className="mt-5 rounded-full border border-white/16 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
+                                  <span className="rounded-full border border-white/16 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
                                     Featured
                                   </span>
                                 ) : null}

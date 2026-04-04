@@ -39,14 +39,14 @@ const statusMessageTemplates = {
 
 function SummaryCard({ icon: Icon, label, value, note }) {
   return (
-    <Card className="border-white/20 bg-slate-950/70 p-5 text-white shadow-[0_24px_60px_rgba(2,8,23,0.28)]">
+    <Card className="admin-soft-panel p-5 text-slate-900 shadow-[0_24px_48px_rgba(148,75,37,0.12)]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">{label}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-white">{value}</p>
-          <p className="mt-2 text-sm leading-6 text-white/70">{note}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{note}</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500/14 text-brand-300">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300/60 via-orange-200/70 to-rose-200/70 text-orange-700 shadow-[0_10px_24px_rgba(249,115,22,0.18)]">
           <Icon className="h-5 w-5" />
         </div>
       </div>
@@ -62,8 +62,8 @@ function FilterChip({ label, active, onClick }) {
       className={cn(
         "rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition",
         active
-          ? "border-brand-400/60 bg-brand-500/16 text-brand-300"
-          : "border-white/18 bg-white/8 text-slate-300 hover:border-white/28 hover:bg-white/12"
+          ? "border-orange-300/70 bg-gradient-to-r from-amber-200/90 via-orange-100/90 to-rose-100/90 text-orange-700 shadow-[0_8px_20px_rgba(249,115,22,0.14)]"
+          : "border-white/55 bg-white/48 text-slate-600 hover:border-orange-200/70 hover:bg-white/70"
       )}
     >
       {label}
@@ -82,19 +82,19 @@ function StatusCombobox({ value, open, onToggle, onSelect, disabled }) {
         disabled={disabled}
         className={cn(
           "flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition",
-          "border-white/20 bg-slate-950/72 text-white shadow-[0_14px_36px_rgba(2,8,23,0.18)]",
-          disabled ? "cursor-not-allowed opacity-70" : "hover:border-white/30"
+          "border-white/55 bg-white/72 text-slate-900 shadow-[0_14px_32px_rgba(148,75,37,0.12)] backdrop-blur-xl",
+          disabled ? "cursor-not-allowed opacity-70" : "hover:border-orange-200/70"
         )}
       >
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/50">Current stage</p>
-          <p className="mt-1 text-sm font-semibold text-white">{currentMeta.label}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Current stage</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">{currentMeta.label}</p>
         </div>
-        <ChevronDown className={cn("h-4 w-4 text-white/70 transition", open ? "rotate-180" : "")} />
+        <ChevronDown className={cn("h-4 w-4 text-slate-500 transition", open ? "rotate-180" : "")} />
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 rounded-2xl border border-white/18 bg-slate-950/94 p-2 shadow-[0_24px_60px_rgba(2,8,23,0.34)] backdrop-blur-2xl">
+        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 rounded-2xl border border-white/55 bg-white/84 p-2 shadow-[0_24px_48px_rgba(148,75,37,0.16)] backdrop-blur-2xl">
           <div className="space-y-1">
             {orderStatusOptions.map((option) => {
               const meta = getOrderStatusMeta(option.value);
@@ -107,16 +107,16 @@ function StatusCombobox({ value, open, onToggle, onSelect, disabled }) {
                   onClick={() => onSelect(option.value)}
                   className={cn(
                     "w-full rounded-xl px-3 py-3 text-left transition",
-                    active ? "bg-brand-500/18" : "hover:bg-white/8"
+                    active ? "bg-gradient-to-r from-amber-200/90 via-orange-100/90 to-rose-100/90" : "hover:bg-white/65"
                   )}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-white">{option.label}</p>
+                    <p className="text-sm font-semibold text-slate-900">{option.label}</p>
                     <span className={cn("rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]", meta.tone)}>
                       {active ? "Active" : "Stage"}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-white/64">{meta.description}</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">{meta.description}</p>
                 </button>
               );
             })}
@@ -129,30 +129,30 @@ function StatusCombobox({ value, open, onToggle, onSelect, disabled }) {
 
 function OrderItemCard({ item }) {
   return (
-    <div className="rounded-2xl border border-white/14 bg-slate-950/58 p-4 text-white">
+    <div className="rounded-2xl border border-white/55 bg-white/56 p-4 text-slate-900 shadow-[0_14px_30px_rgba(148,75,37,0.08)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-white">{item.displayName}</p>
-          {item.serviceTitle ? <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-300">{item.serviceTitle}</p> : null}
-          <p className="mt-2 text-xs leading-6 text-white/64">
+          <p className="text-sm font-semibold text-slate-900">{item.displayName}</p>
+          {item.serviceTitle ? <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-orange-600">{item.serviceTitle}</p> : null}
+          <p className="mt-2 text-xs leading-6 text-slate-600">
             {item.colorMode === "color" ? "Color" : "B&W"} | {item.paperSize} | {item.copies} copies | {item.pageRange}
           </p>
-          <p className="text-xs leading-6 text-white/64">
+          <p className="text-xs leading-6 text-slate-600">
             {item.bindingType !== "none" ? item.bindingType : "standard"} | {item.printSide} sided | {item.scaleType}
           </p>
-          <p className="text-xs leading-6 text-white/64">
+          <p className="text-xs leading-6 text-slate-600">
             {item.finishType || "standard"} | {item.materialType || "standard_stock"} | {item.productVariant || "standard"} | {item.priorityLevel || "standard"}
           </p>
-          {item.customSize ? <p className="text-xs leading-6 text-white/64">Custom size: {item.customSize}</p> : null}
+          {item.customSize ? <p className="text-xs leading-6 text-slate-600">Custom size: {item.customSize}</p> : null}
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
-          <p className="text-sm font-semibold text-white">{formatCurrency(item.totalPrice || 0)}</p>
+          <p className="text-sm font-semibold text-slate-900">{formatCurrency(item.totalPrice || 0)}</p>
           {item.fileUrl ? (
             <a
               href={item.fileUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/8 px-3 py-2 text-xs font-semibold text-white/84 transition hover:bg-white/12"
+              className="inline-flex items-center gap-2 rounded-full border border-white/65 bg-white/72 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-white"
             >
               <Download className="h-3.5 w-3.5" />
               {item.fileName || "Download file"}
@@ -475,27 +475,27 @@ export function AdminPage() {
 
       <section className="py-12 sm:py-16">
         <div className="section-shell">
-          <div className="rounded-[32px] border border-white/18 bg-[linear-gradient(135deg,rgba(8,24,56,0.92),rgba(10,55,106,0.78))] px-6 py-6 text-white shadow-[0_30px_80px_rgba(2,8,23,0.28)] backdrop-blur-2xl sm:px-8">
+          <div className="admin-hero rounded-[32px] px-6 py-6 text-slate-900 shadow-[0_30px_80px_rgba(148,75,37,0.16)] backdrop-blur-2xl sm:px-8">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/16 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-brand-300">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/44 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-orange-700">
                   <Sparkles className="h-3.5 w-3.5" />
                   Admin workspace
                 </div>
-                <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Order operations and tracking</h1>
-                <p className="mt-3 max-w-3xl text-sm leading-7 text-white/72">
+                <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Order operations and tracking</h1>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-700">
                   Manage daily updates, review incoming jobs, and move orders through production without the admin view becoming noisy.
                 </p>
                 {user?.username ? (
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Signed in as {user.username}</p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Signed in as {user.username}</p>
                 ) : null}
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button variant="outline" className="border-white/14 bg-white/8 text-white hover:bg-white/12 hover:text-white" onClick={loadOrders}>
+                <Button variant="outline" className="rounded-full border-white/60 bg-white/52 px-5 text-slate-800 shadow-[0_12px_28px_rgba(148,75,37,0.1)] hover:bg-white/76 hover:text-slate-900" onClick={loadOrders}>
                   <RefreshCcw className="h-4 w-4" />
                   Refresh
                 </Button>
-                <Button variant="outline" className="border-white/14 bg-white/8 text-white hover:bg-white/12 hover:text-white" onClick={handleLogout}>
+                <Button variant="outline" className="rounded-full border-white/60 bg-white/52 px-5 text-slate-800 shadow-[0_12px_28px_rgba(148,75,37,0.1)] hover:bg-white/76 hover:text-slate-900" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
                   Sign out
                 </Button>
@@ -504,12 +504,12 @@ export function AdminPage() {
           </div>
 
           <div className="mt-6">
-            <Card className="border-white/16 bg-slate-950/74 p-6 text-white shadow-[0_24px_60px_rgba(2,8,23,0.24)]">
+            <Card className="admin-panel p-6 text-slate-900 shadow-[0_24px_60px_rgba(148,75,37,0.14)]">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-300">Daily homepage update</p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">Keep the site feeling active</h2>
-                  <p className="mt-3 max-w-3xl text-sm leading-7 text-white/68">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">Daily homepage update</p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">Keep the site feeling active</h2>
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
                     Update the homepage offer and delivery messaging here. Live counts still come from real order activity.
                   </p>
                 </div>
@@ -522,36 +522,36 @@ export function AdminPage() {
               {siteContentLoading ? (
                 <div className="mt-6 grid gap-4 lg:grid-cols-3">
                   {Array.from({ length: 6 }).map((_, index) => (
-                    <Skeleton key={index} className="h-12 w-full bg-white/10" />
+                    <Skeleton key={index} className="h-12 w-full bg-white/65" />
                   ))}
                 </div>
               ) : (
                 <div className="mt-6 grid gap-4 lg:grid-cols-3">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-white/84">Banner label</label>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Banner label</label>
                     <Input value={siteContent.bannerLabel} onChange={(event) => setSiteContentDraft({ bannerLabel: event.target.value })} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-white/84">Delivery status</label>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Delivery status</label>
                     <Input value={siteContent.shopStatus} onChange={(event) => setSiteContentDraft({ shopStatus: event.target.value })} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-white/84">Turnaround promise</label>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Turnaround promise</label>
                     <Input value={siteContent.turnaroundTime} onChange={(event) => setSiteContentDraft({ turnaroundTime: event.target.value })} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-white/84">Primary metric label</label>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Primary metric label</label>
                     <Input value={siteContent.primaryMetricLabel} onChange={(event) => setSiteContentDraft({ primaryMetricLabel: event.target.value })} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-white/84">Secondary metric label</label>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Secondary metric label</label>
                     <Input value={siteContent.secondaryMetricLabel} onChange={(event) => setSiteContentDraft({ secondaryMetricLabel: event.target.value })} />
                   </div>
-                  <div className="rounded-2xl border border-white/14 bg-white/6 px-4 py-4 text-sm leading-6 text-white/68">
+                  <div className="admin-soft-panel rounded-2xl px-4 py-4 text-sm leading-6 text-slate-600">
                     These counts stay automatic. You only control the wording and daily messaging.
                   </div>
                   <div className="lg:col-span-3">
-                    <label className="mb-2 block text-sm font-semibold text-white/84">Daily offer</label>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Daily offer</label>
                     <Textarea
                       value={siteContent.dailyOffer}
                       onChange={(event) => setSiteContentDraft({ dailyOffer: event.target.value })}
@@ -559,7 +559,7 @@ export function AdminPage() {
                     />
                   </div>
                   <div className="lg:col-span-3">
-                    <label className="mb-2 block text-sm font-semibold text-white/84">Daily message</label>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Daily message</label>
                     <Textarea
                       value={siteContent.dailyMessage}
                       onChange={(event) => setSiteContentDraft({ dailyMessage: event.target.value })}
@@ -580,12 +580,12 @@ export function AdminPage() {
           </div>
 
           <div className="mt-6">
-            <Card className="border-white/16 bg-slate-950/74 p-6 text-white shadow-[0_24px_60px_rgba(2,8,23,0.24)]">
+            <Card className="admin-panel p-6 text-slate-900 shadow-[0_24px_60px_rgba(148,75,37,0.14)]">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-300">Service pricing control</p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">Manage the full services catalog</h2>
-                  <p className="mt-3 max-w-3xl text-sm leading-7 text-white/68">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">Service pricing control</p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">Manage the full services catalog</h2>
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
                     This list is seeded from the services shown in your reference images. Update prices here and the Services tab changes automatically.
                   </p>
                 </div>
@@ -597,7 +597,7 @@ export function AdminPage() {
 
               <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="relative min-w-[260px]">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/44" />
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     value={serviceSearch}
                     onChange={(event) => setServiceSearch(event.target.value)}
@@ -620,24 +620,24 @@ export function AdminPage() {
 
               <div className="mt-5 space-y-2">
                 {serviceCatalogLoading ? (
-                  Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-16 w-full bg-white/10" />)
+                  Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-16 w-full bg-white/65" />)
                 ) : (
                   filteredServiceCatalog.map((item) => (
                     <div
                       key={item.code}
-                      className="grid gap-3 rounded-2xl border border-white/12 bg-white/6 px-4 py-4 lg:grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_auto]"
+                      className="grid gap-3 rounded-2xl border border-white/55 bg-white/52 px-4 py-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_auto]"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-white">{item.title}</p>
-                        <p className="mt-1 text-xs text-white/56">{item.category}</p>
-                        <p className="mt-2 text-xs leading-6 text-white/62">{item.description}</p>
+                        <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                        <p className="mt-1 text-xs text-slate-500">{item.category}</p>
+                        <p className="mt-2 text-xs leading-6 text-slate-600">{item.description}</p>
                       </div>
                       <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-white/46">Price label</label>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Price label</label>
                         <Input value={item.priceLabel} onChange={(event) => setServiceItemDraft(item.code, { priceLabel: event.target.value })} />
                       </div>
                       <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-white/46">Unit</label>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Unit</label>
                         <Input value={item.unitLabel} onChange={(event) => setServiceItemDraft(item.code, { unitLabel: event.target.value })} />
                       </div>
                       <div className="flex items-end">
@@ -647,8 +647,8 @@ export function AdminPage() {
                           className={cn(
                             "w-full rounded-2xl border px-3 py-3 text-sm font-semibold transition",
                             item.active
-                              ? "border-emerald-400/30 bg-emerald-500/12 text-emerald-300"
-                              : "border-white/14 bg-white/6 text-white/62"
+                              ? "border-emerald-300/60 bg-emerald-100/90 text-emerald-700"
+                              : "border-white/65 bg-white/70 text-slate-600"
                           )}
                         >
                           {item.active ? "Visible" : "Hidden"}
@@ -661,8 +661,8 @@ export function AdminPage() {
                           className={cn(
                             "w-full rounded-2xl border px-3 py-3 text-sm font-semibold transition",
                             item.featured
-                              ? "border-brand-400/30 bg-brand-500/12 text-brand-300"
-                              : "border-white/14 bg-white/6 text-white/62"
+                              ? "border-orange-300/60 bg-orange-100/90 text-orange-700"
+                              : "border-white/65 bg-white/70 text-slate-600"
                           )}
                         >
                           {item.featured ? "Featured" : "Standard"}
@@ -673,7 +673,7 @@ export function AdminPage() {
                 )}
 
                 {!serviceCatalogLoading && filteredServiceCatalog.length === 0 ? (
-                  <Card className="border-white/12 bg-white/6 p-6 text-center text-sm text-white/70">
+                  <Card className="admin-soft-panel p-6 text-center text-sm text-slate-600">
                     No service items match the current filters.
                   </Card>
                 ) : null}
@@ -681,15 +681,15 @@ export function AdminPage() {
             </Card>
           </div>
 
-          <div className="mt-6 rounded-[28px] border border-white/16 bg-slate-950/74 p-4 shadow-[0_24px_60px_rgba(2,8,23,0.24)] backdrop-blur-2xl sm:p-5">
+          <div className="admin-panel mt-6 rounded-[28px] p-4 shadow-[0_24px_60px_rgba(148,75,37,0.14)] backdrop-blur-2xl sm:p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-300">Order queue</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">Compact order management</h2>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">Order queue</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Compact order management</h2>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="relative min-w-[260px]">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/44" />
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
@@ -715,13 +715,13 @@ export function AdminPage() {
             <div className="mt-5 space-y-3">
               {loading
                 ? Array.from({ length: 5 }).map((_, index) => (
-                    <Card key={index} className="border-white/12 bg-white/6 p-4">
+                    <Card key={index} className="admin-soft-panel p-4">
                       <div className="grid gap-4 lg:grid-cols-[1.3fr_0.8fr_0.9fr_0.6fr_auto]">
-                        <Skeleton className="h-14 w-full bg-white/10" />
-                        <Skeleton className="h-14 w-full bg-white/10" />
-                        <Skeleton className="h-14 w-full bg-white/10" />
-                        <Skeleton className="h-14 w-full bg-white/10" />
-                        <Skeleton className="h-14 w-24 bg-white/10" />
+                        <Skeleton className="h-14 w-full bg-white/65" />
+                        <Skeleton className="h-14 w-full bg-white/65" />
+                        <Skeleton className="h-14 w-full bg-white/65" />
+                        <Skeleton className="h-14 w-full bg-white/65" />
+                        <Skeleton className="h-14 w-24 bg-white/65" />
                       </div>
                     </Card>
                   ))
@@ -735,23 +735,23 @@ export function AdminPage() {
 
                     return (
                       <motion.div key={order.id} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}>
-                        <Card className="overflow-visible border-white/12 bg-white/6 p-4 text-white backdrop-blur-xl">
+                        <Card className="admin-soft-panel overflow-visible p-4 text-slate-900 backdrop-blur-xl">
                           <div className="grid gap-4 lg:grid-cols-[1.25fr_0.8fr_0.9fr_0.65fr_auto] lg:items-center">
                             <div>
                               <div className="flex flex-wrap items-center gap-3">
-                                <p className="text-base font-semibold text-white">{order.id}</p>
+                                <p className="text-base font-semibold text-slate-900">{order.id}</p>
                                 <span className={cn("rounded-full border px-3 py-1 text-xs font-semibold", statusMeta.tone)}>
                                   {statusMeta.label}
                                 </span>
                               </div>
-                              <p className="mt-2 text-sm font-medium text-white/82">{order.name}</p>
-                              <p className="mt-1 text-xs text-white/56">{order.phone} | {order.address}</p>
+                              <p className="mt-2 text-sm font-medium text-slate-800">{order.name}</p>
+                              <p className="mt-1 text-xs text-slate-500">{order.phone} | {order.address}</p>
                             </div>
 
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/46">Items</p>
-                              <p className="mt-2 text-sm font-semibold text-white">{order.itemCount || order.items?.length || 0} documents</p>
-                              <p className="mt-1 text-xs text-white/56">Updated {formatDate(order.updatedAt || order.createdAt)}</p>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Items</p>
+                              <p className="mt-2 text-sm font-semibold text-slate-900">{order.itemCount || order.items?.length || 0} documents</p>
+                              <p className="mt-1 text-xs text-slate-500">Updated {formatDate(order.updatedAt || order.createdAt)}</p>
                             </div>
 
                             <div>
@@ -771,8 +771,8 @@ export function AdminPage() {
                             </div>
 
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/46">Amount</p>
-                              <p className="mt-2 text-lg font-semibold text-white">{formatCurrency(order.totalAmount || 0)}</p>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Amount</p>
+                              <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(order.totalAmount || 0)}</p>
                             </div>
 
                             <div className="flex items-center justify-end gap-2">
@@ -783,7 +783,7 @@ export function AdminPage() {
                               <button
                                 type="button"
                                 onClick={() => setExpandedOrderId((current) => (current === order.id ? "" : order.id))}
-                                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/16 bg-white/8 text-white/80 transition hover:bg-white/12"
+                                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/65 bg-white/72 text-slate-600 transition hover:bg-white"
                                 aria-label={expanded ? "Collapse order details" : "Expand order details"}
                               >
                                 {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -792,27 +792,27 @@ export function AdminPage() {
                           </div>
 
                           {expanded ? (
-                            <div className="mt-5 grid gap-4 border-t border-white/10 pt-5 xl:grid-cols-[1.2fr_0.95fr]">
+                            <div className="mt-5 grid gap-4 border-t border-white/55 pt-5 xl:grid-cols-[1.2fr_0.95fr]">
                               <div className="space-y-4">
                                 <div className="grid gap-3 sm:grid-cols-3">
-                                  <div className="rounded-2xl border border-white/12 bg-slate-950/54 px-4 py-4">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/44">Submitted</p>
-                                    <p className="mt-2 text-sm font-semibold text-white">{formatDate(order.createdAt)}</p>
+                                  <div className="admin-soft-panel rounded-2xl px-4 py-4">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Submitted</p>
+                                    <p className="mt-2 text-sm font-semibold text-slate-900">{formatDate(order.createdAt)}</p>
                                   </div>
-                                  <div className="rounded-2xl border border-white/12 bg-slate-950/54 px-4 py-4">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/44">Customer</p>
-                                    <p className="mt-2 text-sm font-semibold text-white">{order.name}</p>
+                                  <div className="admin-soft-panel rounded-2xl px-4 py-4">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Customer</p>
+                                    <p className="mt-2 text-sm font-semibold text-slate-900">{order.name}</p>
                                   </div>
-                                  <div className="rounded-2xl border border-white/12 bg-slate-950/54 px-4 py-4">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/44">Phone</p>
-                                    <p className="mt-2 text-sm font-semibold text-white">{order.phone}</p>
+                                  <div className="admin-soft-panel rounded-2xl px-4 py-4">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Phone</p>
+                                    <p className="mt-2 text-sm font-semibold text-slate-900">{order.phone}</p>
                                   </div>
                                 </div>
 
                                 {order.notes ? (
-                                  <div className="rounded-2xl border border-white/12 bg-slate-950/54 px-4 py-4">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/44">Customer notes</p>
-                                    <p className="mt-2 text-sm leading-7 text-white/72">{order.notes}</p>
+                                  <div className="admin-soft-panel rounded-2xl px-4 py-4">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Customer notes</p>
+                                    <p className="mt-2 text-sm leading-7 text-slate-600">{order.notes}</p>
                                   </div>
                                 ) : null}
 
@@ -824,21 +824,21 @@ export function AdminPage() {
                               </div>
 
                               <div className="space-y-4">
-                                <div className="rounded-2xl border border-white/12 bg-slate-950/54 px-4 py-4">
-                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/44">Customer-facing summary</p>
-                                  <p className="mt-2 text-sm leading-7 text-white/72">{statusMeta.description}</p>
+                                <div className="admin-soft-panel rounded-2xl px-4 py-4">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Customer-facing summary</p>
+                                  <p className="mt-2 text-sm leading-7 text-slate-600">{statusMeta.description}</p>
                                 </div>
 
-                                <div className="rounded-2xl border border-white/12 bg-slate-950/54 px-4 py-4">
-                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/44">Tracking code</p>
-                                  <p className="mt-2 text-sm font-semibold text-white">{order.id}</p>
-                                  <p className="mt-2 text-xs leading-6 text-white/58">
+                                <div className="admin-soft-panel rounded-2xl px-4 py-4">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Tracking code</p>
+                                  <p className="mt-2 text-sm font-semibold text-slate-900">{order.id}</p>
+                                  <p className="mt-2 text-xs leading-6 text-slate-500">
                                     Share the order ID and ask the customer to use their phone number on the tracking page.
                                   </p>
                                 </div>
 
                                 <div>
-                                  <label className="mb-2 block text-sm font-semibold text-white/84">Tracking message</label>
+                                  <label className="mb-2 block text-sm font-semibold text-slate-700">Tracking message</label>
                                   <Textarea
                                     value={draft.trackingMessage}
                                     onChange={(event) => setDraft(order.id, { trackingMessage: event.target.value })}
@@ -855,7 +855,7 @@ export function AdminPage() {
             </div>
 
             {!loading && filteredOrders.length === 0 ? (
-              <Card className="mt-4 border-white/12 bg-white/6 p-8 text-center text-sm text-white/70">
+              <Card className="admin-soft-panel mt-4 p-8 text-center text-sm text-slate-600">
                 No orders match the current filters. Try a broader search or switch the stage filter.
               </Card>
             ) : null}

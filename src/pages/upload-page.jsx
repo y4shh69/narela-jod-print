@@ -136,24 +136,24 @@ function ServicePicker({ value, items, groupedItems, loading, onSelect }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/20 bg-slate-950/72 px-4 py-3 text-left text-white shadow-[0_14px_36px_rgba(2,8,23,0.18)] transition hover:border-white/30"
+        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/82 px-4 py-3 text-left text-slate-900 shadow-[0_14px_36px_rgba(148,75,37,0.12)] backdrop-blur-xl transition hover:border-orange-300/70"
       >
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/50">Requested service</p>
-          <p className="mt-1 truncate text-sm font-semibold text-white">{selectedItem?.title || "Document Printing"}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Requested service</p>
+          <p className="mt-1 truncate text-sm font-semibold text-slate-900">{selectedItem?.title || "Document Printing"}</p>
         </div>
-        <ChevronDown className={cn("h-4 w-4 text-white/70 transition", open ? "rotate-180" : "")} />
+        <ChevronDown className={cn("h-4 w-4 text-slate-500 transition", open ? "rotate-180" : "")} />
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-2xl border border-white/18 bg-slate-950/96 shadow-[0_24px_60px_rgba(2,8,23,0.34)] backdrop-blur-2xl">
+        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-2xl border border-white/60 bg-white/88 shadow-[0_24px_60px_rgba(148,75,37,0.14)] backdrop-blur-2xl">
           <div className="max-h-80 overflow-y-auto p-2">
             {loading ? (
-              <div className="px-3 py-4 text-sm font-medium text-white/68">Loading services...</div>
+              <div className="px-3 py-4 text-sm font-medium text-slate-600">Loading services...</div>
             ) : (
               groupedItems.map(([category, categoryItems]) => (
                 <div key={category} className="pb-2">
-                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-300">{category}</p>
+                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">{category}</p>
                   <div className="space-y-1">
                     {categoryItems.map((item) => {
                       const active = item.code === value;
@@ -167,14 +167,14 @@ function ServicePicker({ value, items, groupedItems, loading, onSelect }) {
                           }}
                           className={cn(
                             "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition",
-                            active ? "bg-brand-500/18" : "hover:bg-white/8"
+                            active ? "bg-gradient-to-r from-amber-200/90 via-orange-100/90 to-rose-100/90" : "hover:bg-white"
                           )}
                         >
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-white">{item.title}</p>
-                            <p className="mt-1 truncate text-xs text-white/56">{item.priceLabel} · {item.unitLabel}</p>
+                            <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
+                            <p className="mt-1 truncate text-xs text-slate-500">{item.priceLabel} - {item.unitLabel}</p>
                           </div>
-                          {active ? <Check className="h-4 w-4 shrink-0 text-brand-300" /> : null}
+                          {active ? <Check className="h-4 w-4 shrink-0 text-orange-600" /> : null}
                         </button>
                       );
                     })}
@@ -1330,4 +1330,6 @@ export function UploadPage() {
     </>
   );
 }
+
+
 

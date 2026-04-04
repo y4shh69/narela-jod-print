@@ -2,19 +2,19 @@ import { cn } from "../../lib/utils";
 
 const variants = {
   primary:
-    "border border-white/70 bg-[linear-gradient(180deg,rgba(255,154,20,0.88),rgba(255,154,20,0.72))] text-white shadow-xl shadow-orange-500/20 backdrop-blur-xl hover:-translate-y-0.5 hover:bg-[linear-gradient(180deg,rgba(255,154,20,0.94),rgba(255,154,20,0.8))]",
+    "border border-blue-600 bg-blue-600 !text-white shadow-xl shadow-blue-500/20 hover:-translate-y-0.5 hover:brightness-110",
   secondary:
-    "border border-white/56 bg-white/24 text-slate-950 shadow-lg shadow-slate-200/18 backdrop-blur-xl hover:-translate-y-0.5 hover:bg-white/34",
+    "border border-black/10 bg-white/70 text-slate-900 shadow-lg shadow-slate-900/10 hover:-translate-y-0.5 hover:brightness-105",
   outline:
-    "border border-white/42 bg-white/14 text-slate-800 backdrop-blur-xl hover:bg-white/22 hover:text-slate-950",
-  ghost: "text-slate-800 hover:bg-white/10 hover:text-slate-950",
+    "border border-black/10 bg-transparent text-slate-700 hover:bg-black/5",
+  ghost: "text-slate-700 hover:bg-black/5",
 };
 
 export function Button({ className, variant = "primary", ...props }) {
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold tracking-[0.01em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold tracking-[0.01em] transition duration-200 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 [&>*]:!text-inherit",
         variants[variant],
         className
       )}

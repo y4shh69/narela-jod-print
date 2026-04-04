@@ -71,44 +71,44 @@ export function HomePage() {
 
       <section className="relative overflow-hidden py-16 sm:py-24">
         <div className="section-shell">
-          <div className="hero-gradient rounded-[32px] px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-            <div className="relative z-10 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div className="hero-gradient rounded-[28px] px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+            <div className="relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-              <span className="hero-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <span className="hero-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700">
                 <Sparkles className="h-4 w-4 text-brand-500" />
                 {siteContent?.bannerLabel || "Modern print workflows for delivery-first teams"}
               </span>
-              <h1 className="mt-6 max-w-3xl text-5xl font-extrabold tracking-tight !text-slate-950 sm:text-6xl lg:text-7xl">
+              <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
                 Fast Printing & Xerox Services
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 !text-slate-700 dark:!text-slate-300">
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
                 Upload files, set print preferences, and confirm your order in minutes. Built for students, startups, offices, and urgent same-day jobs.
               </p>
-              <div className="mt-6 rounded-[28px] border border-white/18 bg-[linear-gradient(135deg,rgba(10,48,88,0.76),rgba(8,25,56,0.7))] px-5 py-5 text-white shadow-[0_24px_60px_rgba(7,24,53,0.28)] backdrop-blur-2xl">
+              <div className="mt-6 rounded-[24px] border border-black/5 bg-white/70 px-5 py-5 text-slate-900 shadow-[0_20px_48px_rgba(15,23,42,0.12)] backdrop-blur-md">
                 {contentLoading ? (
                   <div className="space-y-3">
-                    <Skeleton className="h-4 w-40 bg-white/15" />
-                    <Skeleton className="h-6 w-full bg-white/10" />
-                    <Skeleton className="h-5 w-4/5 bg-white/10" />
+                    <Skeleton className="h-4 w-40 bg-slate-200/80" />
+                    <Skeleton className="h-6 w-full bg-slate-200/70" />
+                    <Skeleton className="h-5 w-4/5 bg-slate-200/70" />
                   </div>
                 ) : (
                   <>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-300">{siteContent?.shopStatus || "Open now"}</p>
-                    <p className="mt-3 text-2xl font-semibold tracking-tight text-white">{siteContent?.dailyOffer || "A4 B&W prints from Rs 2/page for online and delivery orders."}</p>
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-white/84">{siteContent?.dailyMessage || "Same-day delivery is available on most standard jobs received before evening."}</p>
-                    <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-white/88">
-                      <span className="rounded-full border border-white/16 bg-white/8 px-3 py-2 backdrop-blur-xl">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-600">{siteContent?.shopStatus || "Open now"}</p>
+                    <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">{siteContent?.dailyOffer || "A4 B&W prints from Rs 2/page for online and delivery orders."}</p>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{siteContent?.dailyMessage || "Same-day delivery is available on most standard jobs received before evening."}</p>
+                    <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-slate-700">
+                      <span className="rounded-full border border-black/5 bg-white/80 px-3 py-2 backdrop-blur-sm">
                         {siteContent?.primaryMetricLabel || "Jobs completed today"}: {siteContent?.primaryMetricValue || "0"}
                       </span>
-                      <span className="rounded-full border border-white/16 bg-white/8 px-3 py-2 backdrop-blur-xl">
+                      <span className="rounded-full border border-black/5 bg-white/80 px-3 py-2 backdrop-blur-sm">
                         {siteContent?.secondaryMetricLabel || "Orders in progress"}: {siteContent?.secondaryMetricValue || "0"}
                       </span>
-                      <span className="rounded-full border border-white/16 bg-white/8 px-3 py-2 backdrop-blur-xl">
+                      <span className="rounded-full border border-black/5 bg-white/80 px-3 py-2 backdrop-blur-sm">
                         {siteContent?.turnaroundTime || "Most jobs ready within 30-60 minutes"}
                       </span>
                     </div>
                     {siteContent?.updatedAt ? (
-                      <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-white/58">
+                      <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
                         Updated {formatDate(siteContent.updatedAt)}
                       </p>
                     ) : null}
@@ -117,7 +117,7 @@ export function HomePage() {
               </div>
               <div className="mt-6 flex flex-wrap gap-3">
                 {heroBullets.map((item) => (
-                  <div key={item} className="inline-flex items-center gap-2 rounded-full border border-white/58 bg-white/22 px-4 py-2 text-sm font-medium !text-slate-900 shadow-sm shadow-slate-200/16 backdrop-blur-xl">
+                  <div key={item} className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/70 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm shadow-slate-900/10 backdrop-blur-sm">
                     <CheckCircle2 className="h-4 w-4 text-brand-500" />
                     {item}
                   </div>
@@ -143,8 +143,8 @@ export function HomePage() {
                   <motion.div key={item.title} custom={index + 1} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
                     <div className="service-card h-full rounded-[20px] p-5 transition duration-300 hover:-translate-y-1">
                       <item.icon className="h-5 w-5 text-brand-500" />
-                      <p className="mt-4 text-lg font-semibold text-white">{item.title}</p>
-                      <p className="mt-3 text-sm leading-7 text-white/78">{item.description}</p>
+                      <p className="mt-4 text-lg font-semibold text-slate-900">{item.title}</p>
+                      <p className="mt-3 text-sm leading-7 text-slate-600">{item.description}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -156,16 +156,16 @@ export function HomePage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <div className="rounded-[32px] border border-white/44 bg-white/10 p-6 shadow-xl shadow-slate-200/14 backdrop-blur-2xl">
-                <div className="rounded-[28px] bg-slate-950 p-6 text-white shadow-xl shadow-slate-950/12">
-                  <p className="text-sm uppercase tracking-[0.28em] text-brand-300">Online order preview</p>
+              <div className="rounded-[32px] border border-black/5 bg-white/80 p-6 shadow-xl shadow-slate-900/10 backdrop-blur-md">
+                <div className="preview-panel rounded-[28px] p-6 text-slate-900 shadow-xl">
+                  <p className="text-sm font-bold uppercase tracking-[0.28em] text-slate-800">Online order preview</p>
                   <div className="mt-8 space-y-4">
                     {[
                       "Upload PDF, DOC, PPT, or images",
                       "Select color mode, copies, and paper size",
                       "Confirm on WhatsApp and get it delivered",
                     ].map((line) => (
-                      <div key={line} className="rounded-2xl bg-white/8 p-4 text-white/92">
+                      <div key={line} className="preview-step rounded-2xl p-4 text-base font-semibold text-slate-800">
                         {line}
                       </div>
                     ))}
@@ -173,11 +173,11 @@ export function HomePage() {
                 </div>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {services.slice(0, 4).map((service) => (
-                    <div key={service.title} className="service-card rounded-[24px] p-5">
+                    <div key={service.title} className="service-card rounded-[20px] p-5">
                       <service.icon className="h-6 w-6 text-brand-500" />
-                      <p className="mt-5 text-lg font-semibold text-white">{service.title}</p>
-                      <p className="mt-3 text-sm leading-7 text-white/82">{service.description}</p>
-                      <p className="mt-6 text-base font-semibold text-white">{service.price}</p>
+                      <p className="mt-5 text-lg font-semibold text-slate-900">{service.title}</p>
+                      <p className="mt-3 text-sm leading-7 text-slate-600">{service.description}</p>
+                      <p className="mt-6 text-base font-semibold text-slate-900">{service.price}</p>
                     </div>
                   ))}
                 </div>
@@ -200,9 +200,9 @@ export function HomePage() {
               <motion.div key={service.title} custom={index} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
                 <div className="service-card group h-full rounded-[24px] p-7 transition duration-300 hover:-translate-y-1 hover:scale-[1.02]">
                   <service.icon className="h-8 w-8 text-brand-500" />
-                  <p className="mt-7 text-[2rem] font-semibold tracking-tight text-white">{service.title}</p>
-                  <p className="mt-5 text-sm leading-8 text-white/84">{service.description}</p>
-                  <p className="mt-8 text-[1.75rem] font-semibold tracking-tight text-white">{service.price.replace("From ", "")}</p>
+                  <p className="mt-7 text-[2rem] font-semibold tracking-tight text-slate-900">{service.title}</p>
+                  <p className="mt-5 text-sm leading-8 text-slate-600">{service.description}</p>
+                  <p className="mt-8 text-[1.75rem] font-semibold tracking-tight text-slate-900">{service.price.replace("From ", "")}</p>
                 </div>
               </motion.div>
             ))}
@@ -223,10 +223,10 @@ export function HomePage() {
                 <div className="service-card flex h-full flex-col justify-between rounded-[24px] p-7 transition duration-300 hover:-translate-y-1 hover:scale-[1.01]">
                   <div>
                     <service.icon className="h-8 w-8 text-brand-500" />
-                    <p className="mt-6 text-[2rem] font-semibold tracking-tight text-white">{service.title}</p>
-                    <p className="mt-4 text-sm leading-8 text-white/82">{service.description}</p>
+                    <p className="mt-6 text-[2rem] font-semibold tracking-tight text-slate-900">{service.title}</p>
+                    <p className="mt-4 text-sm leading-8 text-slate-600">{service.description}</p>
                   </div>
-                  <p className="mt-8 text-xl font-semibold text-white">{service.price}</p>
+                  <p className="mt-8 text-xl font-semibold text-slate-900">{service.price}</p>
                 </div>
               </motion.div>
             ))}
@@ -259,31 +259,7 @@ export function HomePage() {
 
       <section className="py-20">
         <div className="section-shell">
-          <div className="rounded-[32px] bg-slate-950 px-6 py-12 text-center text-white shadow-2xl shadow-slate-950/12 sm:px-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand-300">Ready to order</p>
-            <h2 className="mx-auto mt-4 max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              Upload your files once. We handle the rest with speed and clarity.
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-300">
-              Start your print order online, confirm details on WhatsApp, and get it delivered without the usual back-and-forth.
-            </p>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link to="/upload">
-                <Button className="w-full border-white bg-white text-slate-950 hover:bg-slate-100 sm:w-auto">
-                  Start an Order
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                className="w-full border-white/20 bg-white/6 text-white hover:bg-white/10 hover:text-white sm:w-auto"
-                onClick={() => window.open(`https://wa.me/${whatsappNumber}`, "_blank", "noopener,noreferrer")}
-              >
-                Chat on WhatsApp
-              </Button>
-            </div>
-          </div>
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-3">
             <Card className="p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">Today on delivery</p>
               <p className="mt-4 text-xl font-semibold text-slate-950 dark:text-white">{siteContent?.shopStatus || "Open now"}</p>
