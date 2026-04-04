@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-export const whatsappNumber = "919876543210";
+export const whatsappNumber = "919424000266";
 
 export const navLinks = [
   { label: "Home", href: "/" },

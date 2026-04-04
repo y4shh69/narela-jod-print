@@ -41,6 +41,15 @@ public class PrintOrder {
     @Column(nullable = false)
     private String address;
 
+    @Column
+    private String fulfillmentMethod;
+
+    private String paymentMethod;
+
+    private String paymentScreenshotName;
+
+    private String paymentScreenshotUrl;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 
@@ -69,10 +78,22 @@ public class PrintOrder {
         if (orderStatus == null || orderStatus.isBlank()) {
             orderStatus = "submitted";
         }
+        if (fulfillmentMethod == null || fulfillmentMethod.isBlank()) {
+            fulfillmentMethod = "delivery";
+        }
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            paymentMethod = "upi_qr";
+        }
     }
 
     @PreUpdate
     void onUpdate() {
         updatedAt = Instant.now();
+        if (fulfillmentMethod == null || fulfillmentMethod.isBlank()) {
+            fulfillmentMethod = "delivery";
+        }
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            paymentMethod = "upi_qr";
+        }
     }
 }

@@ -5,6 +5,7 @@ public record SiteContentUpdateRequest(
         String dailyOffer,
         String dailyMessage,
         String shopStatus,
+        Boolean shopOpen,
         String turnaroundTime,
         String primaryMetricLabel,
         String secondaryMetricLabel

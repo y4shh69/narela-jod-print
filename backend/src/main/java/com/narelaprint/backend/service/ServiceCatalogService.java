@@ -11,9 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,11 +43,13 @@ public class ServiceCatalogService {
                 .collect(Collectors.toMap(ServiceCatalogItem::getCode, Function.identity()));
 
         List<ServiceCatalogItem> updatedItems = new ArrayList<>();
+        Set<String> requestedCodes = new HashSet<>();
         for (ServiceCatalogItemUpdateRequest itemRequest : request.items()) {
             if (itemRequest == null || blank(itemRequest.code())) {
                 continue;
             }
             String code = itemRequest.code().trim().toLowerCase(Locale.ROOT);
+            requestedCodes.add(code);
             ServiceCatalogItem item = existingByCode.getOrDefault(code, new ServiceCatalogItem());
             item.setCode(code);
             item.setTitle(defaultString(itemRequest.title(), titleFromCode(code)));
@@ -57,6 +61,13 @@ public class ServiceCatalogService {
             item.setActive(itemRequest.active() == null || itemRequest.active());
             item.setSortOrder(itemRequest.sortOrder() == null ? 999 : itemRequest.sortOrder());
             updatedItems.add(item);
+        }
+
+        List<ServiceCatalogItem> removedItems = existingByCode.values().stream()
+                .filter(item -> !requestedCodes.contains(item.getCode()))
+                .toList();
+        if (!removedItems.isEmpty()) {
+            serviceCatalogRepository.deleteAll(removedItems);
         }
 
         serviceCatalogRepository.saveAll(updatedItems);

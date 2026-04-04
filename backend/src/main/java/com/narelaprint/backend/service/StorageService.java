@@ -40,6 +40,24 @@ public class StorageService {
         return previewsRoot;
     }
 
+    public boolean deleteByPublicUrl(String publicUrl) throws IOException {
+        if (publicUrl == null || publicUrl.isBlank() || !publicUrl.startsWith("/uploads/")) {
+            return false;
+        }
+
+        String relativeName = publicUrl.substring("/uploads/".length()).trim();
+        if (relativeName.isBlank() || relativeName.contains("..") || relativeName.contains("/") || relativeName.contains("\\")) {
+            return false;
+        }
+
+        Path target = uploadsRoot.resolve(relativeName).normalize();
+        if (!target.startsWith(uploadsRoot)) {
+            return false;
+        }
+
+        return Files.deleteIfExists(target);
+    }
+
     public String uploadsRootUri() {
         return uploadsRoot.toUri().toString();
     }

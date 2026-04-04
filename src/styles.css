@@ -280,6 +280,19 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.46);
 }
 
+
+.banner-showcase {
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  background:
+    linear-gradient(145deg, rgba(255, 250, 244, 0.62), rgba(255, 237, 220, 0.5)),
+    radial-gradient(circle at top right, rgba(251, 146, 60, 0.18), transparent 38%);
+  box-shadow:
+    0 28px 58px rgba(148, 75, 37, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
 .preview-step {
   border: 1px solid rgba(255, 255, 255, 0.42);
   background: rgba(255, 255, 255, 0.46);
@@ -331,3 +344,8 @@ button {
 .service-card h3 {
   color: var(--text-strong);
 }
+
+
+
+
+

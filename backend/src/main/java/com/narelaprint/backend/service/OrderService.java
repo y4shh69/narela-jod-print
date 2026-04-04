@@ -64,7 +64,17 @@ public class OrderService {
         return toResponse(order);
     }
 
-    public OrderResponse createOrder(String name, String phone, String address, String notes, String itemsJson, MultipartFile[] files)
+    public OrderResponse createOrder(
+            String name,
+            String phone,
+            String address,
+            String fulfillmentMethod,
+            String paymentMethod,
+            String notes,
+            String itemsJson,
+            MultipartFile[] files,
+            MultipartFile paymentScreenshot
+    )
             throws IOException {
         List<QuoteItemRequest> items = objectMapper.readValue(itemsJson, new TypeReference<>() {
         });
@@ -72,14 +82,40 @@ public class OrderService {
             throw new IllegalArgumentException("At least one document is required");
         }
 
+        String normalizedMethod = normalizeFulfillmentMethod(fulfillmentMethod);
+        String normalizedAddress = normalizedMethod.equals("pickup") ? "" : (address == null ? "" : address.trim());
+
+        if (isBlank(name)) {
+            throw new IllegalArgumentException("Name is required");
+        }
+        if (isBlank(phone)) {
+            throw new IllegalArgumentException("Phone is required");
+        }
+        if (normalizedMethod.equals("delivery") && isBlank(normalizedAddress)) {
+            throw new IllegalArgumentException("Delivery address is required");
+        }
+        if (paymentScreenshot == null || paymentScreenshot.isEmpty()) {
+            throw new IllegalArgumentException("Payment screenshot is required");
+        }
+        String normalizedPaymentMethod = isBlank(paymentMethod) ? "upi_qr" : paymentMethod.trim().toLowerCase(Locale.ROOT);
+        if (!"upi_qr".equals(normalizedPaymentMethod)) {
+            throw new IllegalArgumentException("Unsupported payment method");
+        }
+
         PrintOrder order = new PrintOrder();
         order.setPublicId("ORD-" + Instant.now().toEpochMilli());
-        order.setName(name);
-        order.setPhone(phone);
-        order.setAddress(address);
+        order.setName(name.trim());
+        order.setPhone(phone.trim());
+        order.setAddress(normalizedAddress);
+        order.setFulfillmentMethod(normalizedMethod);
+        order.setPaymentMethod(normalizedPaymentMethod);
         order.setNotes(notes);
         order.setOrderStatus("submitted");
-        order.setTrackingMessage("Order received. The print desk will review the files and confirm the job shortly.");
+        order.setTrackingMessage(defaultInitialTrackingMessage(normalizedMethod));
+
+        StorageService.StoredFile storedPaymentScreenshot = storageService.store(paymentScreenshot);
+        order.setPaymentScreenshotName(storedPaymentScreenshot.originalName());
+        order.setPaymentScreenshotUrl(storedPaymentScreenshot.publicUrl());
 
         List<OrderItem> orderItems = new ArrayList<>();
         int totalAmount = 0;
@@ -134,6 +170,10 @@ public class OrderService {
                 order.getName(),
                 order.getPhone(),
                 order.getAddress(),
+                defaultFulfillmentMethod(order.getFulfillmentMethod()),
+                order.getPaymentMethod(),
+                order.getPaymentScreenshotName(),
+                order.getPaymentScreenshotUrl(),
                 order.getNotes(),
                 order.getOrderStatus(),
                 order.getTrackingMessage(),
@@ -181,6 +221,28 @@ public class OrderService {
         return switch (value.trim().toLowerCase(Locale.ROOT)) {
             case "submitted", "confirmed", "printing", "ready", "out_for_delivery", "delivered", "cancelled" -> value.trim().toLowerCase(Locale.ROOT);
             default -> throw new IllegalArgumentException("Unsupported order status");
+        };
+    }
+
+    private String normalizeFulfillmentMethod(String value) {
+        if (isBlank(value)) {
+            return "delivery";
+        }
+
+        return switch (value.trim().toLowerCase(Locale.ROOT)) {
+            case "pickup", "delivery" -> value.trim().toLowerCase(Locale.ROOT);
+            default -> throw new IllegalArgumentException("Unsupported fulfillment method");
+        };
+    }
+
+    private String defaultFulfillmentMethod(String value) {
+        return isBlank(value) ? "delivery" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String defaultInitialTrackingMessage(String fulfillmentMethod) {
+        return switch (fulfillmentMethod) {
+            case "pickup" -> "Order received. The print desk will review the files and confirm when your pickup is ready.";
+            default -> "Order received. The print desk will review the files and confirm the job shortly.";
         };
     }
 

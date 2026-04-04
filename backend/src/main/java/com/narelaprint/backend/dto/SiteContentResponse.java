@@ -7,6 +7,7 @@ public record SiteContentResponse(
         String dailyOffer,
         String dailyMessage,
         String shopStatus,
+        boolean shopOpen,
         String turnaroundTime,
         String primaryMetricLabel,
         String primaryMetricValue,

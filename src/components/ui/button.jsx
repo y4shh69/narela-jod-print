@@ -6,8 +6,8 @@ const variants = {
   secondary:
     "border border-black/10 bg-white/70 text-slate-900 shadow-lg shadow-slate-900/10 hover:-translate-y-0.5 hover:brightness-105",
   outline:
-    "border border-black/10 bg-transparent text-slate-700 hover:bg-black/5",
-  ghost: "text-slate-700 hover:bg-black/5",
+    "border border-slate-300/80 bg-white/65 text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:-translate-y-0.5 hover:bg-white/90",
+  ghost: "text-slate-800 hover:bg-black/5",
 };
 
 export function Button({ className, variant = "primary", ...props }) {

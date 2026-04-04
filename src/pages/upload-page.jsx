@@ -15,13 +15,13 @@ import {
   Trash2,
   UploadCloud,
 } from "lucide-react";
-import { Document, Page, pdfjs } from "react-pdf";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
+import upiQrImage from "../assets/upi qr.png";
 import { useToast } from "../components/toast-provider";
 import { whatsappNumber } from "../lib/constants";
 import { Seo } from "../lib/seo";
@@ -37,11 +37,10 @@ import {
 } from "../lib/print-studio";
 import { cn, formatCurrency, formatFileType } from "../lib/utils";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-
 const customerInitialState = {
   name: "",
   phone: "",
+  fulfillmentMethod: "delivery",
   address: "",
   notes: "",
 };
@@ -191,8 +190,10 @@ function ServicePicker({ value, items, groupedItems, loading, onSelect }) {
 
 export function UploadPage() {
   const fileInputRef = useRef(null);
+  const paymentInputRef = useRef(null);
   const [documents, setDocuments] = useState([]);
   const [activeId, setActiveId] = useState("");
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [customer, setCustomer] = useState(customerInitialState);
   const [errors, setErrors] = useState({});
   const [isDragging, setIsDragging] = useState(false);
@@ -363,6 +364,27 @@ export function UploadPage() {
     }
   }
 
+  function setPaymentProof(file) {
+    setPaymentScreenshot((current) => {
+      if (current?.previewUrl) {
+        URL.revokeObjectURL(current.previewUrl);
+      }
+
+      if (!file) {
+        return null;
+      }
+
+      return {
+        file,
+        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
+      };
+    });
+    setErrors((current) => ({ ...current, paymentScreenshot: "" }));
+    if (paymentInputRef.current) {
+      paymentInputRef.current.value = "";
+    }
+  }
+
   function removeDocument(tempId) {
     setDocuments((current) => {
       const target = current.find((item) => item.tempId === tempId);
@@ -451,73 +473,13 @@ export function UploadPage() {
     );
   }
 
-  async function convertDocumentPreview(tempId) {
-    const target = documents.find((document) => document.tempId === tempId);
-    if (!target) return;
-
-    const payload = new FormData();
-    payload.append("file", target.file);
-
-    setDocuments((current) =>
-      current.map((document) =>
-        document.tempId === tempId ? { ...document, isConvertingPreview: true, conversionError: "" } : document
-      )
-    );
-
-    try {
-      const response = await fetch("/api/preview/convert", {
-        method: "POST",
-        body: payload,
-      });
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Conversion failed");
-      }
-
-      setDocuments((current) =>
-        current.map((document) =>
-          document.tempId === tempId
-            ? {
-                ...document,
-                previewUrl: result.previewUrl,
-                fileType: "pdf",
-                isConvertingPreview: false,
-                conversionError: "",
-              }
-            : document
-        )
-      );
-      showToast({
-        title: "Preview ready",
-        description: "The document was converted to PDF for live preview.",
-      });
-    } catch (error) {
-      setDocuments((current) =>
-        current.map((document) =>
-          document.tempId === tempId
-            ? {
-                ...document,
-                isConvertingPreview: false,
-                conversionError: error.message || "Conversion failed",
-              }
-            : document
-        )
-      );
-      showToast({
-        title: "Preview conversion unavailable",
-        description: error.message || "The server could not convert this file.",
-        variant: "error",
-      });
-    }
-  }
-
   function validate() {
     const nextErrors = {};
     if (!documents.length) nextErrors.documents = "Please upload at least one file.";
     if (!customer.name.trim()) nextErrors.name = "Name is required.";
     if (!/^\d{10}$/.test(customer.phone.trim())) nextErrors.phone = "Enter a valid 10-digit phone number.";
-    if (!customer.address.trim()) nextErrors.address = "Address is required.";
+    if (customer.fulfillmentMethod === "delivery" && !customer.address.trim()) nextErrors.address = "Delivery address is required.";
+    if (!paymentScreenshot?.file) nextErrors.paymentScreenshot = "Payment screenshot is required.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -528,7 +490,7 @@ export function UploadPage() {
     if (!validate()) {
       showToast({
         title: "Please complete the form",
-        description: "We need your customer details and at least one document.",
+        description: "We need your customer details, payment proof, and at least one document.",
         variant: "error",
       });
       return;
@@ -537,9 +499,12 @@ export function UploadPage() {
     const payload = new FormData();
     payload.append("name", customer.name);
     payload.append("phone", customer.phone);
-    payload.append("address", customer.address);
+    payload.append("fulfillmentMethod", customer.fulfillmentMethod);
+    payload.append("paymentMethod", "upi_qr");
+    payload.append("address", customer.fulfillmentMethod === "delivery" ? customer.address : "");
     payload.append("notes", customer.notes);
     documents.forEach((document) => payload.append("files", document.file));
+    payload.append("paymentScreenshot", paymentScreenshot.file);
     payload.append(
       "items",
       JSON.stringify(
@@ -568,8 +533,12 @@ export function UploadPage() {
       documents.forEach((document) => {
         if (document.previewUrl) URL.revokeObjectURL(document.previewUrl);
       });
+      if (paymentScreenshot?.previewUrl) {
+        URL.revokeObjectURL(paymentScreenshot.previewUrl);
+      }
       setDocuments([]);
       setActiveId("");
+      setPaymentScreenshot(null);
       setCustomer(customerInitialState);
       setTotals({ subtotal: 0, total: 0 });
       setErrors({});
@@ -579,7 +548,10 @@ export function UploadPage() {
       });
       showToast({
         title: "Order submitted",
-                    description: `Your files were sent to the delivery team. Tracking ID: ${result.id}.`,
+        description:
+          customer.fulfillmentMethod === "pickup"
+            ? `Your files were sent to the print team for pickup handling. Tracking ID: ${result.id}.`
+            : `Your files were sent to the delivery team. Tracking ID: ${result.id}.`,
       });
     } catch (error) {
       showToast({
@@ -828,30 +800,6 @@ export function UploadPage() {
                               );
                             })}
                           </div>
-                        </div>
-                      ) : null}
-
-                      {previewMode === "placeholder" && ["doc", "docx", "ppt", "pptx"].includes(activeDocument.fileType) ? (
-                        <div className="mt-5 rounded-2xl border px-4 py-4">
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <p className="text-sm font-bold">Convert this file to PDF preview</p>
-                              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                                This uses LibreOffice on the server. Once converted, the file will render in the live preview pane.
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              onClick={() => convertDocumentPreview(activeDocument.tempId)}
-                              disabled={activeDocument.isConvertingPreview}
-                            >
-                              {activeDocument.isConvertingPreview ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-                              {activeDocument.isConvertingPreview ? "Converting..." : "Convert preview"}
-                            </Button>
-                          </div>
-                          {activeDocument.conversionError ? (
-                            <p className="mt-3 text-sm font-medium text-rose-500">{activeDocument.conversionError}</p>
-                          ) : null}
                         </div>
                       ) : null}
 
@@ -1257,18 +1205,132 @@ export function UploadPage() {
                     {errors.phone ? <p className="mt-2 text-sm text-rose-500">{errors.phone}</p> : null}
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-bold">Address</label>
-                    <Input value={customer.address} onChange={(event) => setCustomerField("address", event.target.value)} />
-                    {errors.address ? <p className="mt-2 text-sm text-rose-500">{errors.address}</p> : null}
+                    <label className="mb-2 block text-sm font-bold">Order handoff</label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => setCustomer((current) => ({ ...current, fulfillmentMethod: "delivery" }))}
+                        className={cn(
+                          "rounded-2xl border px-4 py-4 text-left transition",
+                          customer.fulfillmentMethod === "delivery"
+                            ? "border-orange-400/80 bg-gradient-to-r from-amber-300/95 via-orange-200/90 to-rose-200/90 text-slate-900 shadow-[0_12px_28px_rgba(249,115,22,0.18)]"
+                            : "border-slate-200/80 bg-white/75 text-slate-700 hover:border-orange-200/70 hover:bg-white"
+                        )}
+                      >
+                        <p className="text-sm font-semibold">Delivery</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">Send the finished order to the customer's address.</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCustomer((current) => ({ ...current, fulfillmentMethod: "pickup", address: "" }))}
+                        className={cn(
+                          "rounded-2xl border px-4 py-4 text-left transition",
+                          customer.fulfillmentMethod === "pickup"
+                            ? "border-orange-400/80 bg-gradient-to-r from-amber-300/95 via-orange-200/90 to-rose-200/90 text-slate-900 shadow-[0_12px_28px_rgba(249,115,22,0.18)]"
+                            : "border-slate-200/80 bg-white/75 text-slate-700 hover:border-orange-200/70 hover:bg-white"
+                        )}
+                      >
+                        <p className="text-sm font-semibold">Pickup</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">Customer will collect the order directly from the shop.</p>
+                      </button>
+                    </div>
                   </div>
+                  {customer.fulfillmentMethod === "delivery" ? (
+                    <div>
+                      <label className="mb-2 block text-sm font-bold">Delivery address</label>
+                      <Input
+                        value={customer.address}
+                        onChange={(event) => setCustomerField("address", event.target.value)}
+                        placeholder="Enter the full delivery address"
+                      />
+                      {errors.address ? <p className="mt-2 text-sm text-rose-500">{errors.address}</p> : null}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-white/60 bg-white/60 px-4 py-4 text-sm font-medium leading-6 text-slate-600">
+                      Pickup selected. The customer can collect the finished order directly from the shop, so no delivery address is needed.
+                    </div>
+                  )}
                   <div>
                     <label className="mb-2 block text-sm font-bold">Order notes</label>
                     <Textarea
                       value={customer.notes}
                       onChange={(event) => setCustomerField("notes", event.target.value)}
-                    placeholder="Mention urgency, delivery timing, or if you need design help before printing."
+                      placeholder={
+                        customer.fulfillmentMethod === "pickup"
+                          ? "Mention urgency, preferred pickup timing, or if you need design help before printing."
+                          : "Mention urgency, delivery timing, or if you need design help before printing."
+                      }
                     />
                   </div>
+                </div>
+              </Card>
+
+              <Card className="p-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Payment</p>
+                <div className="mt-4 space-y-4">
+                  <div className="rounded-[28px] border border-white/60 bg-white/74 p-4 shadow-[0_16px_36px_rgba(148,75,37,0.1)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">Pay with the shop UPI QR</p>
+                        <p className="mt-1 text-xs leading-6 text-slate-600">
+                          Scan the QR, complete the payment, then upload the screenshot below as proof.
+                        </p>
+                      </div>
+                      <a
+                        href={upiQrImage}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-full border border-slate-300/80 bg-white/92 px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:bg-white"
+                      >
+                        Open image
+                      </a>
+                    </div>
+
+                    <div className="mt-4 overflow-hidden rounded-[24px] border border-white/60 bg-white/90 p-3">
+                      <img src={upiQrImage} alt="UPI QR code" className="mx-auto w-full max-w-[300px] rounded-[20px] object-contain" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold">Payment screenshot</label>
+                    <input
+                      ref={paymentInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => setPaymentProof(event.target.files?.[0] || null)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => paymentInputRef.current?.click()}
+                      className="flex w-full items-center justify-between gap-3 rounded-2xl border border-dashed border-orange-300/70 bg-white/88 px-4 py-4 text-left text-slate-900 transition hover:bg-white"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {paymentScreenshot?.file?.name || "Upload payment screenshot"}
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">Accepted: image proof of the completed payment.</p>
+                      </div>
+                      <UploadCloud className="h-5 w-5 text-orange-600" />
+                    </button>
+                    {errors.paymentScreenshot ? <p className="mt-2 text-sm text-rose-500">{errors.paymentScreenshot}</p> : null}
+                  </div>
+
+                  {paymentScreenshot ? (
+                    <div className="overflow-hidden rounded-[24px] border border-white/60 bg-white/78 p-3">
+                      {paymentScreenshot.previewUrl ? (
+                        <img
+                          src={paymentScreenshot.previewUrl}
+                          alt="Payment screenshot preview"
+                          className="max-h-72 w-full rounded-[18px] object-contain"
+                        />
+                      ) : (
+                        <div className="rounded-[18px] border border-white/60 bg-white/90 px-4 py-6 text-center text-sm font-medium text-slate-600">
+                          {paymentScreenshot.file.name}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
               </Card>
 
@@ -1330,6 +1392,7 @@ export function UploadPage() {
     </>
   );
 }
+
 
 
 

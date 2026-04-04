@@ -28,7 +28,6 @@ Modern startup-style stationery and printing website for Bhopal, built with Reac
 - `DB_USERNAME`
 - `DB_PASSWORD`
 - `UPLOAD_DIR`
-- `SOFFICE_PATH`
 
 Default local values are already configured in `backend/src/main/resources/application.yml`.
 
@@ -41,5 +40,8 @@ Default local values are already configured in `backend/src/main/resources/appli
 
 - The frontend proxies `/api` and `/uploads` to `http://localhost:8080` in development.
 - Spring Boot uses PostgreSQL by default and stores uploads on local disk.
-- If LibreOffice is installed and `soffice` is available in PATH, Office files can be converted to PDF preview from the print studio.
+- Office files such as DOCX and PPTX can still be uploaded for ordering, but the live preview pane only renders PDFs and image files.
 - Update the WhatsApp number in `src/lib/constants.js` before deployment.
+
+
+

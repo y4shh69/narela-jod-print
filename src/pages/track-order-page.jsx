@@ -9,6 +9,18 @@ import { getOrderStatusMeta, getTrackingProgress, orderStatusTimeline } from "..
 import { Seo } from "../lib/seo";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 
+function getFulfillmentMeta(method, address) {
+  return method === "pickup"
+    ? {
+        label: "Pickup",
+        detail: "Collect from the shop after the team marks the order ready.",
+      }
+    : {
+        label: "Delivery",
+        detail: address || "Delivery address will be confirmed by the team.",
+      };
+}
+
 export function TrackOrderPage() {
   const [orderId, setOrderId] = useState("");
   const [phone, setPhone] = useState("");
@@ -59,6 +71,7 @@ export function TrackOrderPage() {
 
   const statusMeta = order ? getOrderStatusMeta(order.orderStatus) : null;
   const progress = order ? getTrackingProgress(order.orderStatus) : 0;
+  const fulfillmentMeta = order ? getFulfillmentMeta(order.fulfillmentMethod, order.address) : null;
 
   return (
     <>
@@ -223,6 +236,14 @@ export function TrackOrderPage() {
                       <div className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3">
                         <span className="text-slate-500 dark:text-slate-300">Customer</span>
                         <span>{order.name}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3">
+                        <span className="text-slate-500 dark:text-slate-300">Handoff</span>
+                        <span>{fulfillmentMeta.label}</span>
+                      </div>
+                      <div className="rounded-2xl border px-4 py-3">
+                        <p className="text-slate-500 dark:text-slate-300">Pickup / delivery details</p>
+                        <p className="mt-2 text-right text-sm font-semibold text-slate-900 dark:text-white">{fulfillmentMeta.detail}</p>
                       </div>
                       <div className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3">
                         <span className="text-slate-500 dark:text-slate-300">Items</span>

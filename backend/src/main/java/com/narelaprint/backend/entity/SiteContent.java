@@ -33,6 +33,9 @@ public class SiteContent {
     private String shopStatus;
 
     @Column(nullable = false)
+    private Boolean shopOpen;
+
+    @Column(nullable = false)
     private String turnaroundTime;
 
     @Column(nullable = false)
@@ -48,11 +51,17 @@ public class SiteContent {
         if (id == null) {
             id = 1L;
         }
+        if (shopOpen == null) {
+            shopOpen = true;
+        }
         updatedAt = Instant.now();
     }
 
     @PreUpdate
     void onUpdate() {
+        if (shopOpen == null) {
+            shopOpen = true;
+        }
         updatedAt = Instant.now();
     }
 }

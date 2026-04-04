@@ -8,6 +8,7 @@ import {
   LoaderCircle,
   LogOut,
   PackageCheck,
+  Plus,
   RefreshCcw,
   Search,
   Sparkles,
@@ -19,6 +20,7 @@ import { useAdminAuth } from "../components/admin-auth-provider";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
+import { Select } from "../components/ui/select";
 import { Skeleton } from "../components/ui/skeleton";
 import { Textarea } from "../components/ui/textarea";
 import { useToast } from "../components/toast-provider";
@@ -36,6 +38,38 @@ const statusMessageTemplates = {
   delivered: "Order completed successfully and delivered to the customer.",
   cancelled: "This order has been cancelled. Reach out to the customer if a follow-up is needed.",
 };
+
+const newServiceInitialState = {
+  title: "",
+  category: "Printing",
+  description: "",
+  priceLabel: "From Rs 99",
+  unitLabel: "starting price",
+  featured: false,
+  active: true,
+};
+
+function buildServiceCode(title = "") {
+  return title
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .replace(/_+/g, "_");
+}
+
+function getFulfillmentMeta(method) {
+  return method === "pickup"
+    ? {
+        label: "Pickup",
+        note: "Customer will collect from the shop",
+      }
+    : {
+        label: "Delivery",
+        note: "Deliver to the provided address",
+      };
+}
 
 function SummaryCard({ icon: Icon, label, value, note }) {
   return (
@@ -94,7 +128,7 @@ function StatusCombobox({ value, open, onToggle, onSelect, disabled }) {
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 rounded-2xl border border-white/55 bg-white/84 p-2 shadow-[0_24px_48px_rgba(148,75,37,0.16)] backdrop-blur-2xl">
+        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 rounded-2xl border border-white/55 bg-white/84 p-2 shadow-[0_24px_48px_rgba(148,75,37,0.16)] backdrop-blur-2xl">
           <div className="space-y-1">
             {orderStatusOptions.map((option) => {
               const meta = getOrderStatusMeta(option.value);
@@ -177,6 +211,7 @@ export function AdminPage() {
     dailyOffer: "",
     dailyMessage: "",
     shopStatus: "",
+    shopOpen: true,
     turnaroundTime: "",
     primaryMetricLabel: "",
     secondaryMetricLabel: "",
@@ -188,6 +223,7 @@ export function AdminPage() {
   const [serviceCatalogSaving, setServiceCatalogSaving] = useState(false);
   const [serviceSearch, setServiceSearch] = useState("");
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState("all");
+  const [newService, setNewService] = useState(newServiceInitialState);
   const [drafts, setDrafts] = useState({});
   const { showToast } = useToast();
   const { user, logout } = useAdminAuth();
@@ -243,15 +279,10 @@ export function AdminPage() {
         dailyOffer: payload.dailyOffer || "",
         dailyMessage: payload.dailyMessage || "",
         shopStatus: payload.shopStatus || "",
+        shopOpen: payload.shopOpen !== false,
         turnaroundTime: payload.turnaroundTime || "",
         primaryMetricLabel: payload.primaryMetricLabel || "",
         secondaryMetricLabel: payload.secondaryMetricLabel || "",
-      });
-    } catch (error) {
-      showToast({
-        title: "Homepage content unavailable",
-        description: "Could not load the daily update settings.",
-        variant: "error",
       });
     } finally {
       setSiteContentLoading(false);
@@ -305,7 +336,7 @@ export function AdminPage() {
 
     return orders.filter((order) => {
       const matchesStatus = statusFilter === "all" ? true : order.orderStatus === statusFilter;
-      const haystack = [order.id, order.name, order.phone, order.address]
+      const haystack = [order.id, order.name, order.phone, order.address, order.fulfillmentMethod]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -324,6 +355,11 @@ export function AdminPage() {
     });
   }, [serviceCatalog, serviceSearch, serviceCategoryFilter]);
 
+  const serviceCategoryOptions = useMemo(() => {
+    const catalogCategories = serviceCatalog.map((item) => item.category).filter(Boolean);
+    return Array.from(new Set([...serviceCategoryOrder, ...catalogCategories]));
+  }, [serviceCatalog]);
+
   function setDraft(orderId, patch) {
     setDrafts((current) => ({
       ...current,
@@ -335,67 +371,157 @@ export function AdminPage() {
   }
 
   function setSiteContentDraft(patch) {
-    setSiteContent((current) => ({
-      ...current,
-      ...patch,
-    }));
-  }
+  setSiteContent((current) => ({
+    ...current,
+    ...patch,
+  }));
+}
 
-  function setServiceItemDraft(code, patch) {
-    setServiceCatalog((current) =>
-      current.map((item) => (item.code === code ? { ...item, ...patch } : item))
-    );
-  }
+function setServiceItemDraft(code, patch) {
+  setServiceCatalog((current) =>
+    current.map((item) => (item.code === code ? { ...item, ...patch } : item))
+  );
+}
 
-  async function handleLogout() {
-    await logout();
-    navigate("/admin/login", { replace: true });
+function setNewServiceDraft(patch) {
+  setNewService((current) => ({
+    ...current,
+    ...patch,
+  }));
+}
+
+async function addServiceItem() {
+  const title = newService.title.trim();
+  const code = buildServiceCode(title);
+
+  if (!title) {
     showToast({
-      title: "Admin signed out",
-      description: "The admin session has been closed.",
+      title: "Service title required",
+      description: "Add a title before creating a new service item.",
+      variant: "error",
     });
+    return;
   }
 
-  async function saveSiteContent() {
-    try {
-      setSiteContentSaving(true);
-      const response = await fetch("/api/site-content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(siteContent),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload.error || "Unable to save homepage content.");
-      }
+  if (!code) {
+    showToast({
+      title: "Invalid service title",
+      description: "Use a clearer title so we can generate a valid service code.",
+      variant: "error",
+    });
+    return;
+  }
 
-      setSiteContent({
-        bannerLabel: payload.bannerLabel || "",
-        dailyOffer: payload.dailyOffer || "",
-        dailyMessage: payload.dailyMessage || "",
-        shopStatus: payload.shopStatus || "",
-        turnaroundTime: payload.turnaroundTime || "",
-        primaryMetricLabel: payload.primaryMetricLabel || "",
-        secondaryMetricLabel: payload.secondaryMetricLabel || "",
-      });
+  if (serviceCatalog.some((item) => item.code === code)) {
+    showToast({
+      title: "Service already exists",
+      description: "A service with a similar title/code is already in the catalog.",
+      variant: "error",
+    });
+    return;
+  }
 
-      showToast({
-        title: "Homepage updated",
-        description: "The daily offer and live status are now updated on the website.",
-      });
-    } catch (error) {
-      showToast({
-        title: "Save failed",
-        description: error.message || "The homepage update could not be saved.",
-        variant: "error",
-      });
-    } finally {
-      setSiteContentSaving(false);
+  const nextSortOrder = serviceCatalog.length
+    ? Math.max(...serviceCatalog.map((item) => item.sortOrder || 0)) + 1
+    : 1;
+
+  const nextCatalog = [
+    {
+      code,
+      title,
+      category: newService.category.trim() || "Printing",
+      description: newService.description.trim() || "Professional print and stationery support.",
+      priceLabel: newService.priceLabel.trim() || "From Rs 99",
+      unitLabel: newService.unitLabel.trim() || "starting price",
+      featured: newService.featured,
+      active: newService.active,
+      sortOrder: nextSortOrder,
+    },
+    ...serviceCatalog,
+  ];
+
+  try {
+    setServiceCatalogSaving(true);
+    const response = await fetch("/api/service-catalog", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ items: nextCatalog }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to add the new service.");
     }
-  }
 
-  async function saveServiceCatalog() {
+    setServiceCatalog(payload.items || []);
+    setNewService(newServiceInitialState);
+    setServiceSearch("");
+    setServiceCategoryFilter("all");
+    showToast({
+      title: "Service added",
+      description: "The new service is now published and visible in the Services tab.",
+    });
+  } catch (error) {
+    showToast({
+      title: "Add service failed",
+      description: error.message || "The new service could not be saved.",
+      variant: "error",
+    });
+  } finally {
+    setServiceCatalogSaving(false);
+  }
+}
+
+async function handleLogout() {
+  await logout();
+  navigate("/admin/login", { replace: true });
+  showToast({
+    title: "Admin signed out",
+    description: "The admin session has been closed.",
+  });
+}
+
+async function saveSiteContent() {
+  try {
+    setSiteContentSaving(true);
+    const response = await fetch("/api/site-content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(siteContent),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to save homepage content.");
+    }
+
+    setSiteContent({
+      bannerLabel: payload.bannerLabel || "",
+      dailyOffer: payload.dailyOffer || "",
+      dailyMessage: payload.dailyMessage || "",
+      shopStatus: payload.shopStatus || "",
+      shopOpen: payload.shopOpen !== false,
+      turnaroundTime: payload.turnaroundTime || "",
+      primaryMetricLabel: payload.primaryMetricLabel || "",
+      secondaryMetricLabel: payload.secondaryMetricLabel || "",
+    });
+
+    showToast({
+      title: "Homepage updated",
+      description: "The daily offer, live status, and banner state are now updated on the website.",
+    });
+  } catch (error) {
+    showToast({
+      title: "Save failed",
+      description: error.message || "The homepage update could not be saved.",
+      variant: "error",
+    });
+  } finally {
+    setSiteContentSaving(false);
+  }
+}
+
+async function saveServiceCatalog() {
     try {
       setServiceCatalogSaving(true);
       const response = await fetch("/api/service-catalog", {
@@ -421,8 +547,51 @@ export function AdminPage() {
       });
     } finally {
       setServiceCatalogSaving(false);
-    }
   }
+}
+
+async function removeServiceItem(code) {
+  const target = serviceCatalog.find((item) => item.code === code);
+  if (!target) return;
+
+  const nextCatalog = serviceCatalog.filter((item) => item.code !== code);
+  if (!nextCatalog.length) {
+    showToast({
+      title: "Cannot remove all services",
+      description: "Keep at least one service in the catalog.",
+      variant: "error",
+    });
+    return;
+  }
+
+  try {
+    setServiceCatalogSaving(true);
+    const response = await fetch("/api/service-catalog", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ items: nextCatalog }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to remove the service.");
+    }
+
+    setServiceCatalog(payload.items || []);
+    showToast({
+      title: "Service removed",
+      description: `${target.title} has been removed from the live services catalog.`,
+    });
+  } catch (error) {
+    showToast({
+      title: "Remove failed",
+      description: error.message || "The service could not be removed.",
+      variant: "error",
+    });
+  } finally {
+    setServiceCatalogSaving(false);
+  }
+}
 
   async function saveOrderStatus(orderId) {
     const draft = drafts[orderId];
@@ -521,7 +690,7 @@ export function AdminPage() {
 
               {siteContentLoading ? (
                 <div className="mt-6 grid gap-4 lg:grid-cols-3">
-                  {Array.from({ length: 6 }).map((_, index) => (
+                  {Array.from({ length: 7 }).map((_, index) => (
                     <Skeleton key={index} className="h-12 w-full bg-white/65" />
                   ))}
                 </div>
@@ -532,8 +701,38 @@ export function AdminPage() {
                     <Input value={siteContent.bannerLabel} onChange={(event) => setSiteContentDraft({ bannerLabel: event.target.value })} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">Delivery status</label>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Display status text</label>
                     <Input value={siteContent.shopStatus} onChange={(event) => setSiteContentDraft({ shopStatus: event.target.value })} />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Shop banner state</label>
+                    <div className="flex gap-3 rounded-2xl border border-white/55 bg-white/52 p-2 shadow-[0_14px_30px_rgba(148,75,37,0.08)]">
+                      <button
+                        type="button"
+                        onClick={() => setSiteContentDraft({ shopOpen: true })}
+                        className={cn(
+                          "flex-1 rounded-2xl px-4 py-3 text-sm font-semibold transition",
+                          siteContent.shopOpen
+                            ? "bg-gradient-to-r from-emerald-200 to-lime-100 text-emerald-800 shadow-[0_10px_24px_rgba(16,185,129,0.16)]"
+                            : "text-slate-600 hover:bg-white/70"
+                        )}
+                      >
+                        Open banners
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSiteContentDraft({ shopOpen: false })}
+                        className={cn(
+                          "flex-1 rounded-2xl px-4 py-3 text-sm font-semibold transition",
+                          siteContent.shopOpen === false
+                            ? "bg-gradient-to-r from-rose-200 to-orange-100 text-rose-800 shadow-[0_10px_24px_rgba(244,63,94,0.14)]"
+                            : "text-slate-600 hover:bg-white/70"
+                        )}
+                      >
+                        Closed banners
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-slate-500">This switches the homepage slider between open-shop and closed-shop banner sets.</p>
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-700">Turnaround promise</label>
@@ -548,7 +747,7 @@ export function AdminPage() {
                     <Input value={siteContent.secondaryMetricLabel} onChange={(event) => setSiteContentDraft({ secondaryMetricLabel: event.target.value })} />
                   </div>
                   <div className="admin-soft-panel rounded-2xl px-4 py-4 text-sm leading-6 text-slate-600">
-                    These counts stay automatic. You only control the wording and daily messaging.
+                    These counts stay automatic. You control the wording, the visible status text, and which banner set the homepage slider uses.
                   </div>
                   <div className="lg:col-span-3">
                     <label className="mb-2 block text-sm font-semibold text-slate-700">Daily offer</label>
@@ -618,6 +817,89 @@ export function AdminPage() {
                 </div>
               </div>
 
+              <div className="mt-5 grid gap-3 rounded-2xl border border-white/55 bg-white/48 p-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1fr_1fr_1.2fr_0.8fr_0.75fr_auto]">
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">New service title</label>
+                  <Input
+                    value={newService.title}
+                    onChange={(event) => setNewServiceDraft({ title: event.target.value })}
+                    placeholder="Example: Mug Printing"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Category</label>
+                  <Select
+                    value={newService.category}
+                    onChange={(event) => setNewServiceDraft({ category: event.target.value })}
+                  >
+                    {serviceCategoryOptions.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Description</label>
+                  <Input
+                    value={newService.description}
+                    onChange={(event) => setNewServiceDraft({ description: event.target.value })}
+                    placeholder="Short service description"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Price label</label>
+                  <Input
+                    value={newService.priceLabel}
+                    onChange={(event) => setNewServiceDraft({ priceLabel: event.target.value })}
+                    placeholder="From Rs 99"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Unit</label>
+                  <Input
+                    value={newService.unitLabel}
+                    onChange={(event) => setNewServiceDraft({ unitLabel: event.target.value })}
+                    placeholder="starting price"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button type="button" onClick={addServiceItem} className="w-full">
+                    <Plus className="h-4 w-4" />
+                    Add service
+                  </Button>
+                </div>
+                <div className="lg:col-span-6 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setNewServiceDraft({ active: !newService.active })}
+                    className={cn(
+                      "rounded-2xl border px-3 py-3 text-sm font-semibold transition",
+                      newService.active
+                        ? "border-emerald-300/60 bg-emerald-100/90 text-emerald-700"
+                        : "border-white/65 bg-white/70 text-slate-600"
+                    )}
+                  >
+                    {newService.active ? "Visible on site" : "Hidden initially"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewServiceDraft({ featured: !newService.featured })}
+                    className={cn(
+                      "rounded-2xl border px-3 py-3 text-sm font-semibold transition",
+                      newService.featured
+                        ? "border-orange-300/60 bg-orange-100/90 text-orange-700"
+                        : "border-white/65 bg-white/70 text-slate-600"
+                    )}
+                  >
+                    {newService.featured ? "Featured service" : "Standard service"}
+                  </button>
+                  <div className="rounded-2xl border border-white/65 bg-white/72 px-4 py-3 text-sm font-medium text-slate-600">
+                    Generated code: <span className="font-semibold text-slate-900">{buildServiceCode(newService.title) || "service_code"}</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="mt-5 space-y-2">
                 {serviceCatalogLoading ? (
                   Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-16 w-full bg-white/65" />)
@@ -625,7 +907,7 @@ export function AdminPage() {
                   filteredServiceCatalog.map((item) => (
                     <div
                       key={item.code}
-                      className="grid gap-3 rounded-2xl border border-white/55 bg-white/52 px-4 py-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_auto]"
+                      className="grid gap-3 rounded-2xl border border-white/55 bg-white/52 px-4 py-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_0.55fr_auto]"
                     >
                       <div>
                         <p className="text-sm font-semibold text-slate-900">{item.title}</p>
@@ -666,6 +948,16 @@ export function AdminPage() {
                           )}
                         >
                           {item.featured ? "Featured" : "Standard"}
+                        </button>
+                      </div>
+                      <div className="flex items-end">
+                        <button
+                          type="button"
+                          onClick={() => removeServiceItem(item.code)}
+                          disabled={serviceCatalogSaving}
+                          className="w-full rounded-2xl border border-rose-300/70 bg-rose-100/90 px-3 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-200/90 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Remove
                         </button>
                       </div>
                     </div>
@@ -731,11 +1023,12 @@ export function AdminPage() {
                       trackingMessage: order.trackingMessage || "",
                     };
                     const statusMeta = getOrderStatusMeta(draft.status);
+                    const fulfillmentMeta = getFulfillmentMeta(order.fulfillmentMethod);
                     const expanded = expandedOrderId === order.id;
 
                     return (
                       <motion.div key={order.id} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}>
-                        <Card className="admin-soft-panel overflow-visible p-4 text-slate-900 backdrop-blur-xl">
+                        <Card className={cn("admin-soft-panel overflow-visible p-4 text-slate-900 backdrop-blur-xl", openStatusId === order.id ? "relative z-20" : "relative z-0")}>
                           <div className="grid gap-4 lg:grid-cols-[1.25fr_0.8fr_0.9fr_0.65fr_auto] lg:items-center">
                             <div>
                               <div className="flex flex-wrap items-center gap-3">
@@ -743,9 +1036,15 @@ export function AdminPage() {
                                 <span className={cn("rounded-full border px-3 py-1 text-xs font-semibold", statusMeta.tone)}>
                                   {statusMeta.label}
                                 </span>
+                                <span className="rounded-full border border-white/65 bg-white/72 px-3 py-1 text-xs font-semibold text-slate-700">
+                                  {fulfillmentMeta.label}
+                                </span>
                               </div>
                               <p className="mt-2 text-sm font-medium text-slate-800">{order.name}</p>
-                              <p className="mt-1 text-xs text-slate-500">{order.phone} | {order.address}</p>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {order.phone}
+                                {order.fulfillmentMethod === "pickup" ? " | Pickup from shop" : order.address ? ` | ${order.address}` : ""}
+                              </p>
                             </div>
 
                             <div>
@@ -794,7 +1093,7 @@ export function AdminPage() {
                           {expanded ? (
                             <div className="mt-5 grid gap-4 border-t border-white/55 pt-5 xl:grid-cols-[1.2fr_0.95fr]">
                               <div className="space-y-4">
-                                <div className="grid gap-3 sm:grid-cols-3">
+                                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                   <div className="admin-soft-panel rounded-2xl px-4 py-4">
                                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Submitted</p>
                                     <p className="mt-2 text-sm font-semibold text-slate-900">{formatDate(order.createdAt)}</p>
@@ -806,6 +1105,13 @@ export function AdminPage() {
                                   <div className="admin-soft-panel rounded-2xl px-4 py-4">
                                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Phone</p>
                                     <p className="mt-2 text-sm font-semibold text-slate-900">{order.phone}</p>
+                                  </div>
+                                  <div className="admin-soft-panel rounded-2xl px-4 py-4">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Handoff</p>
+                                    <p className="mt-2 text-sm font-semibold text-slate-900">{fulfillmentMeta.label}</p>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                      {order.fulfillmentMethod === "pickup" ? "Customer pickup from shop" : order.address || fulfillmentMeta.note}
+                                    </p>
                                   </div>
                                 </div>
 
@@ -837,6 +1143,24 @@ export function AdminPage() {
                                   </p>
                                 </div>
 
+                                <div className="admin-soft-panel rounded-2xl px-4 py-4">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Payment proof</p>
+                                  <p className="mt-2 text-sm font-semibold text-slate-900">UPI QR payment</p>
+                                  {order.paymentScreenshotUrl ? (
+                                    <a
+                                      href={order.paymentScreenshotUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-300/80 bg-white/92 px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:bg-white"
+                                    >
+                                      <Download className="h-3.5 w-3.5" />
+                                      {order.paymentScreenshotName || "Open screenshot"}
+                                    </a>
+                                  ) : (
+                                    <p className="mt-2 text-xs leading-6 text-slate-500">No payment screenshot available.</p>
+                                  )}
+                                </div>
+
                                 <div>
                                   <label className="mb-2 block text-sm font-semibold text-slate-700">Tracking message</label>
                                   <Textarea
@@ -865,3 +1189,10 @@ export function AdminPage() {
     </>
   );
 }
+
+
+
+
+
+
+

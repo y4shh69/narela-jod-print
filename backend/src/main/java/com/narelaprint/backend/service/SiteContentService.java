@@ -30,7 +30,8 @@ public class SiteContentService {
         content.setBannerLabel(cleanOrDefault(request.bannerLabel(), "Today's update"));
         content.setDailyOffer(cleanOrDefault(request.dailyOffer(), "A4 B&W prints from Rs 2/page for online and delivery orders."));
         content.setDailyMessage(cleanOrDefault(request.dailyMessage(), "Same-day delivery is available on most standard jobs received before evening."));
-        content.setShopStatus(cleanOrDefault(request.shopStatus(), "Delivery active"));
+        content.setShopStatus(cleanOrDefault(request.shopStatus(), "Open now"));
+        content.setShopOpen(request.shopOpen() == null ? true : request.shopOpen());
         content.setTurnaroundTime(cleanOrDefault(request.turnaroundTime(), "Most jobs ready within 30-60 minutes"));
         content.setPrimaryMetricLabel(cleanOrDefault(request.primaryMetricLabel(), "Jobs completed today"));
         content.setSecondaryMetricLabel(cleanOrDefault(request.secondaryMetricLabel(), "Orders in progress"));
@@ -38,13 +39,20 @@ public class SiteContentService {
     }
 
     private SiteContent getOrCreate() {
-        return siteContentRepository.findById(1L).orElseGet(() -> {
+        return siteContentRepository.findById(1L).map(content -> {
+            if (content.getShopOpen() == null) {
+                content.setShopOpen(true);
+                return siteContentRepository.save(content);
+            }
+            return content;
+        }).orElseGet(() -> {
             SiteContent content = new SiteContent();
             content.setId(1L);
             content.setBannerLabel("Today's update");
             content.setDailyOffer("A4 B&W prints from Rs 2/page for online and delivery orders.");
             content.setDailyMessage("Same-day delivery is available on most standard jobs received before evening.");
-            content.setShopStatus("Delivery active");
+            content.setShopStatus("Open now");
+            content.setShopOpen(true);
             content.setTurnaroundTime("Most jobs ready within 30-60 minutes");
             content.setPrimaryMetricLabel("Jobs completed today");
             content.setSecondaryMetricLabel("Orders in progress");
@@ -70,6 +78,7 @@ public class SiteContentService {
                 content.getDailyOffer(),
                 content.getDailyMessage(),
                 content.getShopStatus(),
+                Boolean.TRUE.equals(content.getShopOpen()),
                 content.getTurnaroundTime(),
                 content.getPrimaryMetricLabel(),
                 String.valueOf(completedToday),

@@ -139,6 +139,7 @@ export function buildQuotePayload(documents) {
 }
 
 export function buildWhatsAppText(customer, documents, total) {
+  const fulfillmentLabel = customer.fulfillmentMethod === "pickup" ? "Pickup from shop" : "Delivery";
   const documentLines = documents
     .map(
       (document, index) =>
@@ -148,6 +149,6 @@ export function buildWhatsAppText(customer, documents, total) {
     .join("\n");
 
   return encodeURIComponent(
-    `Hello, I want to place a print order.\nName: ${customer.name || "-"}\nPhone: ${customer.phone || "-"}\nAddress: ${customer.address || "-"}\nDocuments:\n${documentLines || "-"}\nEstimated total: Rs ${total || 0}`
+    `Hello, I want to place a print order.\nName: ${customer.name || "-"}\nPhone: ${customer.phone || "-"}\nFulfillment: ${fulfillmentLabel}\nAddress: ${customer.fulfillmentMethod === "pickup" ? "Pickup from shop" : customer.address || "-"}\nDocuments:\n${documentLines || "-"}\nEstimated total: Rs ${total || 0}`
   );
 }
