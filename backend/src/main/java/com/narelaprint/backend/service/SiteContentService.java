@@ -35,16 +35,22 @@ public class SiteContentService {
         content.setTurnaroundTime(cleanOrDefault(request.turnaroundTime(), "Most jobs ready within 30-60 minutes"));
         content.setPrimaryMetricLabel(cleanOrDefault(request.primaryMetricLabel(), "Jobs completed today"));
         content.setSecondaryMetricLabel(cleanOrDefault(request.secondaryMetricLabel(), "Orders in progress"));
+        content.setDeliveryCharge(normalizeCharge(request.deliveryCharge()));
         return toResponse(siteContentRepository.save(content));
     }
 
     private SiteContent getOrCreate() {
         return siteContentRepository.findById(1L).map(content -> {
+            boolean needsSave = false;
             if (content.getShopOpen() == null) {
                 content.setShopOpen(true);
-                return siteContentRepository.save(content);
+                needsSave = true;
             }
-            return content;
+            if (content.getDeliveryCharge() == null) {
+                content.setDeliveryCharge(30);
+                needsSave = true;
+            }
+            return needsSave ? siteContentRepository.save(content) : content;
         }).orElseGet(() -> {
             SiteContent content = new SiteContent();
             content.setId(1L);
@@ -56,6 +62,7 @@ public class SiteContentService {
             content.setTurnaroundTime("Most jobs ready within 30-60 minutes");
             content.setPrimaryMetricLabel("Jobs completed today");
             content.setSecondaryMetricLabel("Orders in progress");
+            content.setDeliveryCharge(30);
             return siteContentRepository.save(content);
         });
     }
@@ -84,11 +91,16 @@ public class SiteContentService {
                 String.valueOf(completedToday),
                 content.getSecondaryMetricLabel(),
                 String.valueOf(activeOrders),
+                normalizeCharge(content.getDeliveryCharge()),
                 content.getUpdatedAt()
         );
     }
 
     private String cleanOrDefault(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value.trim();
+    }
+
+    private int normalizeCharge(Integer value) {
+        return value == null || value < 0 ? 30 : value;
     }
 }

@@ -1,7 +1,7 @@
 import { ExternalLink, MapPin, Navigation } from "lucide-react";
 
 const mapUrl = "https://www.google.com/maps?q=23.2687781,77.4683819&z=17&output=embed";
-const directionsUrl = "https://maps.app.goo.gl/oMsa44wFfC5ppxdA8";
+const directionsUrl = "https://maps.app.goo.gl/jwqWHviSMq4cVx9L6";
 
 export function MapsEmbed() {
   return (
@@ -62,3 +62,4 @@ export function MapsEmbed() {
     </div>
   );
 }
+

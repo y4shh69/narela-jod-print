@@ -1,38 +1,27 @@
 import {
-  Check,
-  ChevronDown,
-  BriefcaseBusiness,
-  CheckSquare,
-  FileText,
   Layers3,
   LoaderCircle,
-  Maximize2,
   MessageCircleMore,
-  Monitor,
-  Palette,
-  ScanLine,
-  Shapes,
   Trash2,
   UploadCloud,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { PrintSettings } from "../components/print-settings";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Select } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import upiQrImage from "../assets/upi qr.png";
 import { useToast } from "../components/toast-provider";
 import { whatsappNumber } from "../lib/constants";
 import { Seo } from "../lib/seo";
-import { groupServicesByCategory } from "../lib/service-catalog";
 import {
   buildQuotePayload,
   buildWhatsAppText,
   createDocumentItem,
   fileTypeLabels,
-  getPreviewMode,
   getServiceCategory,
+  getPreviewMode,
   getServicePreset,
 } from "../lib/print-studio";
 import { cn, formatCurrency, formatFileType } from "../lib/utils";
@@ -46,20 +35,220 @@ const customerInitialState = {
 };
 
 function getPageSizeLabel(category) {
-  switch (category) {
-    case "cards":
-      return "Card size";
-    case "calendar":
-      return "Calendar format";
-    case "gifts":
-      return "Product size";
-    case "office":
-      return "Product format";
-    default:
-      return "Paper size";
+  if (category === "cards") return "Card size";
+  if (category === "calendar") return "Calendar format";
+  if (category === "gifts") return "Product size";
+  if (category === "office") return "Product format";
+  return "Paper size";
+}
+
+
+
+
+async function getPdfPageCount(file) {
+  const buffer = await file.arrayBuffer();
+  const data = new Uint8Array(buffer);
+
+  // Use PDF.js directly for reliable page counting across environments.
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const workerUrl = (await import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url")).default;
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+  async function loadCount(options) {
+    const loadingTask = pdfjs.getDocument(options);
+    try {
+      const pdf = await loadingTask.promise;
+      const count = Number(pdf.numPages || 1);
+      await pdf.cleanup?.();
+      await pdf.destroy?.();
+      return Math.max(count, 1);
+    } finally {
+      loadingTask.destroy?.();
+    }
+  }
+
+  try {
+    return await loadCount({ data });
+  } catch (error) {
+    // Fallback for environments where the PDF worker fails to load.
+    return await loadCount({ data, disableWorker: true });
   }
 }
 
+function findZipEndOfCentralDirectory(bytes) {
+  // EOCD signature: 0x06054b50. Search backwards up to 64KB + 22 bytes.
+  const sig = 0x06054b50;
+  const maxComment = 0xffff;
+  const minSize = 22;
+  const start = Math.max(0, bytes.length - (minSize + maxComment));
+  for (let i = bytes.length - minSize; i >= start; i--) {
+    const value =
+      bytes[i] |
+      (bytes[i + 1] << 8) |
+      (bytes[i + 2] << 16) |
+      (bytes[i + 3] << 24);
+    if (value === sig) return i;
+  }
+  return -1;
+}
+
+function readUint16LE(view, offset) {
+  return view.getUint16(offset, true);
+}
+
+function readUint32LE(view, offset) {
+  return view.getUint32(offset, true);
+}
+
+function decodeUtf8(bytes) {
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
+function sliceBytes(bytes, start, length) {
+  return bytes.slice(start, start + length);
+}
+
+async function inflateRawIfNeeded(compressionMethod, compressed) {
+  if (compressionMethod === 0) {
+    return compressed;
+  }
+  if (compressionMethod !== 8) {
+    return null;
+  }
+  if (typeof DecompressionStream === "undefined") {
+    return null;
+  }
+  const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  const inflated = await new Response(stream).arrayBuffer();
+  return new Uint8Array(inflated);
+}
+
+async function extractZipEntry(bytes, entryName) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const eocdOffset = findZipEndOfCentralDirectory(bytes);
+  if (eocdOffset < 0) return null;
+
+  // EOCD layout (we only need central directory offset and total entries).
+  const centralDirSize = readUint32LE(view, eocdOffset + 12);
+  const centralDirOffset = readUint32LE(view, eocdOffset + 16);
+  if (!centralDirSize || !centralDirOffset) return null;
+
+  let ptr = centralDirOffset;
+  const end = centralDirOffset + centralDirSize;
+  while (ptr + 46 <= end) {
+    // Central directory file header signature: 0x02014b50
+    const sig = readUint32LE(view, ptr);
+    if (sig !== 0x02014b50) break;
+
+    const compressionMethod = readUint16LE(view, ptr + 10);
+    const compressedSize = readUint32LE(view, ptr + 20);
+    const fileNameLen = readUint16LE(view, ptr + 28);
+    const extraLen = readUint16LE(view, ptr + 30);
+    const commentLen = readUint16LE(view, ptr + 32);
+    const localHeaderOffset = readUint32LE(view, ptr + 42);
+
+    const nameStart = ptr + 46;
+    const nameBytes = sliceBytes(bytes, nameStart, fileNameLen);
+    const name = decodeUtf8(nameBytes);
+
+    if (name === entryName) {
+      // Local file header signature: 0x04034b50
+      const localSig = readUint32LE(view, localHeaderOffset);
+      if (localSig !== 0x04034b50) return null;
+      const localNameLen = readUint16LE(view, localHeaderOffset + 26);
+      const localExtraLen = readUint16LE(view, localHeaderOffset + 28);
+      const dataOffset = localHeaderOffset + 30 + localNameLen + localExtraLen;
+      const compressed = sliceBytes(bytes, dataOffset, compressedSize);
+      return inflateRawIfNeeded(compressionMethod, compressed);
+    }
+
+    ptr = nameStart + fileNameLen + extraLen + commentLen;
+  }
+
+  return null;
+}
+
+function parseOfficeAppXmlForCount(xmlText, fileType) {
+  // docx: <Pages>n</Pages> (often present). pptx: <Slides>n</Slides>.
+  const tag = fileType === "pptx" ? "Slides" : "Pages";
+  const match = xmlText.match(new RegExp(`<${tag}>(\\d+)</${tag}>`));
+  if (!match) return null;
+  const count = Number(match[1]);
+  return Number.isFinite(count) && count > 0 ? count : null;
+}
+
+async function getOfficeMeta(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const appXml = await extractZipEntry(bytes, "docProps/app.xml");
+  const thumbnailJpg = await extractZipEntry(bytes, "docProps/thumbnail.jpeg");
+  const thumbnailPng = await extractZipEntry(bytes, "docProps/thumbnail.png");
+
+  let pageCount = null;
+  if (appXml) {
+    const xmlText = decodeUtf8(appXml);
+    pageCount = parseOfficeAppXmlForCount(xmlText, String(file.name).toLowerCase().endsWith(".pptx") ? "pptx" : "docx");
+  }
+
+  let thumbnailUrl = "";
+  if (thumbnailJpg) {
+    thumbnailUrl = URL.createObjectURL(new Blob([thumbnailJpg], { type: "image/jpeg" }));
+  } else if (thumbnailPng) {
+    thumbnailUrl = URL.createObjectURL(new Blob([thumbnailPng], { type: "image/png" }));
+  }
+
+  return { pageCount, thumbnailUrl };
+}
+
+async function hydrateDocument(file) {
+  const document = createDocumentItem(file);
+
+  if (document.fileType !== "pdf") {
+    const ext = document.fileType;
+    if (ext === "jpg" || ext === "jpeg" || ext === "png") {
+      return {
+        ...document,
+        settings: {
+          ...document.settings,
+          pages: 1,
+        },
+      };
+    }
+
+    if (ext === "docx" || ext === "pptx") {
+      try {
+        const meta = await getOfficeMeta(file);
+        return {
+          ...document,
+          previewMode: meta.thumbnailUrl ? "image" : document.previewMode,
+          previewUrl: meta.thumbnailUrl || document.previewUrl,
+          settings: {
+            ...document.settings,
+            pages: meta.pageCount || document.settings.pages || 1,
+          },
+        };
+      } catch (error) {
+        return document;
+      }
+    }
+
+    // Legacy Office types (.doc/.ppt) don't have reliable client-side page counts without conversion.
+    return document;
+  }
+
+  try {
+    const pageCount = await getPdfPageCount(file);
+    return {
+      ...document,
+      pdfPageCount: pageCount,
+      settings: {
+        ...document.settings,
+        pages: pageCount,
+      },
+    };
+  } catch (error) {
+    return document;
+  }
+}
 function getPageSizeOptions(category, serviceCode) {
   if (category === "cards") {
     if (String(serviceCode).includes("square")) {
@@ -126,67 +315,9 @@ function getPageSizeOptions(category, serviceCode) {
   ];
 }
 
-function ServicePicker({ value, items, groupedItems, loading, onSelect }) {
-  const [open, setOpen] = useState(false);
-  const selectedItem = items.find((item) => item.code === value);
 
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/82 px-4 py-3 text-left text-slate-900 shadow-[0_14px_36px_rgba(148,75,37,0.12)] backdrop-blur-xl transition hover:border-orange-300/70"
-      >
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Requested service</p>
-          <p className="mt-1 truncate text-sm font-semibold text-slate-900">{selectedItem?.title || "Document Printing"}</p>
-        </div>
-        <ChevronDown className={cn("h-4 w-4 text-slate-500 transition", open ? "rotate-180" : "")} />
-      </button>
 
-      {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-2xl border border-white/60 bg-white/88 shadow-[0_24px_60px_rgba(148,75,37,0.14)] backdrop-blur-2xl">
-          <div className="max-h-80 overflow-y-auto p-2">
-            {loading ? (
-              <div className="px-3 py-4 text-sm font-medium text-slate-600">Loading services...</div>
-            ) : (
-              groupedItems.map(([category, categoryItems]) => (
-                <div key={category} className="pb-2">
-                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">{category}</p>
-                  <div className="space-y-1">
-                    {categoryItems.map((item) => {
-                      const active = item.code === value;
-                      return (
-                        <button
-                          key={item.code}
-                          type="button"
-                          onClick={() => {
-                            onSelect(item);
-                            setOpen(false);
-                          }}
-                          className={cn(
-                            "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition",
-                            active ? "bg-gradient-to-r from-amber-200/90 via-orange-100/90 to-rose-100/90" : "hover:bg-white"
-                          )}
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
-                            <p className="mt-1 truncate text-xs text-slate-500">{item.priceLabel} - {item.unitLabel}</p>
-                          </div>
-                          {active ? <Check className="h-4 w-4 shrink-0 text-orange-600" /> : null}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
+
 
 export function UploadPage() {
   const fileInputRef = useRef(null);
@@ -202,42 +333,12 @@ export function UploadPage() {
   const [serviceCatalog, setServiceCatalog] = useState([]);
   const [serviceCatalogLoading, setServiceCatalogLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [totals, setTotals] = useState({ subtotal: 0, total: 0 });
+  const [totals, setTotals] = useState({ subtotal: 0, deliveryCharge: 0, total: 0 });
   const { showToast } = useToast();
 
   const activeDocument = documents.find((document) => document.tempId === activeId) || documents[0] || null;
-  const activeService = serviceCatalog.find((item) => item.code === activeDocument?.settings.serviceCode) || null;
   const activeServiceCategory = getServiceCategory(activeDocument?.settings.serviceCode, activeDocument?.settings.serviceTitle);
   const activePageSizeOptions = getPageSizeOptions(activeServiceCategory, activeDocument?.settings.serviceCode);
-  const activePreviewUrl = activeDocument?.previewUrl || "";
-  const previewMode = activeDocument ? getPreviewMode(activeDocument.fileType) : "placeholder";
-  const previewPaperClass =
-    activeDocument?.settings.paperSize === "A3"
-      ? "aspect-[1/1.42] max-w-[520px]"
-      : activeDocument?.settings.paperSize === "Legal"
-        ? "aspect-[1/1.57] max-w-[430px]"
-        : activeDocument?.settings.paperSize === "Business Card"
-          ? "aspect-[1.75/1] max-w-[360px]"
-          : activeDocument?.settings.paperSize === "Square Card"
-            ? "aspect-square max-w-[320px]"
-            : activeDocument?.settings.paperSize === "Custom Shape"
-              ? "aspect-[1.4/1] max-w-[340px]"
-              : activeDocument?.settings.paperSize === "Desk Calendar"
-                ? "aspect-[1.3/1] max-w-[420px]"
-                : activeDocument?.settings.paperSize === "Wall Calendar"
-                  ? "aspect-[1/1.1] max-w-[420px]"
-                  : activeDocument?.settings.paperSize === "Single Item"
-                    ? "aspect-square max-w-[360px]"
-                    : activeDocument?.settings.paperSize === "Gift Set"
-                      ? "aspect-[1.3/1] max-w-[420px]"
-        : "aspect-[1/1.41] max-w-[400px]";
-  const previewTransformClass =
-    activeDocument?.settings.orientation === "landscape" ? "rotate-90 scale-[0.74]" : "";
-  const previewScaleClass =
-    activeDocument?.settings.scaleType === "actual" ? "object-center scale-[1.08]" : "object-contain";
-  const previewFilterStyle = {
-    filter: activeDocument?.settings.colorMode === "bw" ? "grayscale(1)" : "none",
-  };
   const quoteKey = useMemo(
     () =>
       JSON.stringify(
@@ -248,7 +349,11 @@ export function UploadPage() {
       ),
     [documents]
   );
-  const groupedServiceCatalog = useMemo(() => groupServicesByCategory(serviceCatalog), [serviceCatalog]);
+  const activePreviewMode = activeDocument ? (activeDocument.previewMode || getPreviewMode(activeDocument.fileType)) : "placeholder";
+  const activePageCount = activeDocument ? Number(activeDocument.pdfPageCount || activeDocument.settings.pages || 1) : 0;
+  const copiesLabel = `${Number(activeDocument?.settings.copies || 1)} ${Number(activeDocument?.settings.copies || 1) === 1 ? "copy" : "copies"}`;
+  const normalizedPhone = customer.phone.replace(/\D/g, "");
+  const isCustomerReadyForPayment = customer.name.trim().length > 0 && normalizedPhone.length >= 10;
 
   useEffect(() => {
     let active = true;
@@ -285,7 +390,7 @@ export function UploadPage() {
 
   useEffect(() => {
     if (!documents.length) {
-      setTotals({ subtotal: 0, total: 0 });
+      setTotals({ subtotal: 0, deliveryCharge: 0, total: 0 });
       return;
     }
 
@@ -296,7 +401,7 @@ export function UploadPage() {
         const response = await fetch("/api/quote", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(buildQuotePayload(documents)),
+          body: JSON.stringify(buildQuotePayload(documents, customer.fulfillmentMethod)),
           signal: controller.signal,
         });
 
@@ -321,6 +426,7 @@ export function UploadPage() {
         );
         setTotals({
           subtotal: payload.subtotal || 0,
+          deliveryCharge: payload.deliveryCharge || 0,
           total: payload.total || 0,
         });
       } catch (error) {
@@ -340,7 +446,7 @@ export function UploadPage() {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [documents.length, quoteKey]);
+  }, [customer.fulfillmentMethod, documents.length, quoteKey, showToast]);
 
   const whatsappLink = useMemo(
     () => `https://wa.me/${whatsappNumber}?text=${buildWhatsAppText(customer, documents, totals.total)}`,
@@ -351,9 +457,11 @@ export function UploadPage() {
     setCustomer((current) => ({ ...current, [field]: value }));
   }
 
-  function addFiles(fileList) {
-    const nextDocuments = Array.from(fileList || []).map(createDocumentItem);
-    if (!nextDocuments.length) return;
+  async function addFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+
+    const nextDocuments = await Promise.all(files.map((file) => hydrateDocument(file)));
 
     setDocuments((current) => [...current, ...nextDocuments]);
     setActiveId((current) => current || nextDocuments[0].tempId);
@@ -424,60 +532,11 @@ export function UploadPage() {
     });
   }
 
-  function handlePdfLoadSuccess(tempId, pdf) {
-    setDocuments((current) =>
-      current.map((document) =>
-        document.tempId === tempId
-          ? {
-              ...document,
-              pdfPageCount: pdf.numPages,
-              selectedPages:
-                document.selectedPages.length > 0
-                  ? document.selectedPages.filter((page) => page <= pdf.numPages)
-                  : Array.from({ length: Math.min(pdf.numPages, 3) }, (_, index) => index + 1),
-              settings: {
-                ...document.settings,
-                pages: pdf.numPages,
-                pageRange:
-                  document.selectedPages.length > 0
-                    ? document.selectedPages.filter((page) => page <= pdf.numPages).join(",")
-                    : pdf.numPages <= 3
-                      ? Array.from({ length: pdf.numPages }, (_, index) => index + 1).join(",")
-                      : "All",
-              },
-            }
-          : document
-      )
-    );
-  }
-
-  function togglePdfPage(tempId, pageNumber) {
-    setDocuments((current) =>
-      current.map((document) => {
-        if (document.tempId !== tempId) return document;
-
-        const exists = document.selectedPages.includes(pageNumber);
-        const selectedPages = exists
-          ? document.selectedPages.filter((page) => page !== pageNumber)
-          : [...document.selectedPages, pageNumber].sort((a, b) => a - b);
-
-        return {
-          ...document,
-          selectedPages,
-          settings: {
-            ...document.settings,
-            pageRange: selectedPages.length ? selectedPages.join(",") : "All",
-          },
-        };
-      })
-    );
-  }
-
   function validate() {
     const nextErrors = {};
     if (!documents.length) nextErrors.documents = "Please upload at least one file.";
     if (!customer.name.trim()) nextErrors.name = "Name is required.";
-    if (!/^\d{10}$/.test(customer.phone.trim())) nextErrors.phone = "Enter a valid 10-digit phone number.";
+    if (normalizedPhone.length < 10) nextErrors.phone = "Enter a valid phone number.";
     if (customer.fulfillmentMethod === "delivery" && !customer.address.trim()) nextErrors.address = "Delivery address is required.";
     if (!paymentScreenshot?.file) nextErrors.paymentScreenshot = "Payment screenshot is required.";
     setErrors(nextErrors);
@@ -540,7 +599,7 @@ export function UploadPage() {
       setActiveId("");
       setPaymentScreenshot(null);
       setCustomer(customerInitialState);
-      setTotals({ subtotal: 0, total: 0 });
+      setTotals({ subtotal: 0, deliveryCharge: 0, total: 0 });
       setErrors({});
       setSuccessMessage({
         orderId: result.id,
@@ -583,8 +642,8 @@ export function UploadPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[300px_1fr_340px]">
-            <aside className="space-y-4">
+          <form onSubmit={handleSubmit} className="grid gap-6 pb-28 md:pb-0 xl:grid-cols-[minmax(220px,280px)_minmax(0,1fr)_minmax(320px,380px)]">
+            <aside className="space-y-4 xl:min-w-[220px]">
               <Card className="p-5">
                 <div
                   onDragOver={(event) => {
@@ -639,17 +698,22 @@ export function UploadPage() {
                         key={document.tempId}
                         className={`rounded-3xl border p-4 transition ${
                           activeId === document.tempId
-                            ? "bg-white/60 shadow-[0_12px_32px_rgba(15,23,42,0.12)] dark:bg-slate-900/55"
+                            ? "border-orange-400/80 bg-gradient-to-r from-amber-300/90 via-orange-200/80 to-rose-200/80 shadow-[0_18px_38px_rgba(148,75,37,0.16)]"
                             : "hover:bg-white/35 dark:hover:bg-slate-900/35"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <button type="button" onClick={() => setActiveId(document.tempId)} className="min-w-0 flex-1 text-left">
-                            <p className="truncate text-sm font-bold">{document.name}</p>
-                            <p className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                            <p className="break-words text-sm font-bold leading-5">{document.name}</p>
+                            <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600 dark:text-slate-300">
                               {fileTypeLabels[document.fileType] || formatFileType(document.fileType)} | {document.settings.paperSize} |{" "}
                               {document.settings.colorMode === "color" ? "Color" : "B&W"} | {document.settings.serviceTitle}
                             </p>
+                            {activeId === document.tempId ? (
+                              <p className="mt-3 inline-flex rounded-full border border-orange-500/40 bg-white/75 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-orange-700">
+                                Editing this file
+                              </p>
+                            ) : null}
                           </button>
                           <button
                             type="button"
@@ -679,172 +743,91 @@ export function UploadPage() {
                   <div className="space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Preview</p>
+                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Document preview</p>
                         <h2 className="mt-2 text-2xl font-semibold">{activeDocument.name}</h2>
+                        <p className="mt-2 max-w-2xl text-sm font-medium leading-7 text-slate-600">
+                          {fileTypeLabels[activeDocument.fileType] || formatFileType(activeDocument.fileType)} file ready for printing. Review the thumbnail and document details here while you adjust the settings on the right.
+                        </p>
                       </div>
-                      <div className="rounded-2xl border px-4 py-2 text-sm font-bold">
-                        {fileTypeLabels[activeDocument.fileType] || formatFileType(activeDocument.fileType)}
+                      <div className="rounded-2xl border border-orange-300/70 bg-gradient-to-r from-amber-300/95 via-orange-200/85 to-rose-200/85 px-4 py-2 text-sm font-bold text-slate-900 shadow-[0_12px_28px_rgba(148,75,37,0.14)]">
+                        Selected file
                       </div>
                     </div>
 
-                    <div className="rounded-[32px] border border-dashed bg-white/35 p-6 dark:bg-slate-900/28">
+                    <div className="rounded-[32px] border border-orange-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,243,235,0.72))] p-6 shadow-[0_22px_48px_rgba(148,75,37,0.10)]">
                       <div className="mb-5 flex flex-wrap gap-2">
-                        <div className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold">
-                          <Palette className="h-3.5 w-3.5" />
-                          {activeDocument.settings.colorMode === "color" ? "Color output" : "Black and white"}
+                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-200/70 bg-white/82 px-3 py-2 text-xs font-bold text-slate-800">
+                          {fileTypeLabels[activeDocument.fileType] || formatFileType(activeDocument.fileType)}
                         </div>
-                        <div className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold">
-                          <ScanLine className="h-3.5 w-3.5" />
-                          {activeDocument.settings.printSide === "double" ? "Double-sided print" : "Single-sided print"}
+                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-200/70 bg-white/82 px-3 py-2 text-xs font-bold text-slate-800">
+                          {activePageCount} {activePageCount === 1 ? "page" : "pages"}
                         </div>
-                        <div className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold">
-                          <Maximize2 className="h-3.5 w-3.5" />
-                          {activeDocument.settings.scaleType === "actual" ? "Actual size" : "Fit to page"}
+                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-200/70 bg-white/82 px-3 py-2 text-xs font-bold text-slate-800">
+                          {activeDocument.settings.serviceTitle}
                         </div>
                       </div>
 
-                      <div className="grid min-h-[420px] place-items-center overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top,_rgba(35,142,255,0.10),_transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.48),rgba(255,255,255,0.18))] p-5 dark:bg-[radial-gradient(circle_at_top,_rgba(35,142,255,0.16),_transparent_36%),linear-gradient(180deg,rgba(15,23,42,0.68),rgba(2,6,23,0.48))]">
-                        <div
-                          className={cn(
-                            "relative w-full overflow-hidden rounded-[28px] border border-white/50 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.20)] transition duration-300 dark:border-white/10 dark:bg-slate-950",
-                            previewPaperClass
-                          )}
-                        >
-                          <div className="absolute inset-x-0 top-0 flex items-center justify-between border-b bg-slate-50/90 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:bg-slate-900/90 dark:text-slate-300">
-                            <span>{activeDocument.settings.paperSize}</span>
-                            <span>{activeDocument.settings.orientation}</span>
+                      <div className="overflow-hidden rounded-[30px] border border-white/70 bg-white/88 shadow-[0_26px_60px_rgba(15,23,42,0.12)]">
+                        {activeDocument.previewUrl && activePreviewMode === "image" ? (
+                          <img
+                            src={activeDocument.previewUrl}
+                            alt={`${activeDocument.name} preview`}
+                            className="h-[420px] w-full object-contain bg-[radial-gradient(circle_at_top,rgba(255,241,230,0.9),rgba(255,255,255,0.96))]"
+                          />
+                        ) : activeDocument.previewUrl && activePreviewMode === "pdf" ? (
+                          <iframe
+                            title={`${activeDocument.name} preview`}
+                            src={`${activeDocument.previewUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                            className="h-[420px] w-full bg-white"
+                          />
+                        ) : (
+                          <div className="grid h-[420px] place-items-center bg-[radial-gradient(circle_at_top,rgba(255,241,230,0.9),rgba(255,255,255,0.96))] p-8 text-center">
+                            <div className="max-w-sm">
+                              <Layers3 className="mx-auto h-12 w-12 text-brand-500" />
+                              <p className="mt-4 text-xl font-bold text-slate-900">Thumbnail unavailable</p>
+                              <p className="mt-3 text-sm font-medium leading-7 text-slate-600">
+                                This file type does not have a live thumbnail, but the selected filename and print settings are ready to submit.
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex h-full items-center justify-center p-4 pt-14">
-                            {previewMode === "image" && activePreviewUrl ? (
-                              <img
-                                src={activePreviewUrl}
-                                alt={activeDocument.name}
-                                style={previewFilterStyle}
-                                className={cn(
-                                  "max-h-full max-w-full rounded-2xl transition duration-300",
-                                  previewScaleClass,
-                                  previewTransformClass
-                                )}
-                              />
-                            ) : null}
-
-                            {previewMode === "pdf" && activePreviewUrl ? (
-                              <div className={cn("h-full w-full overflow-auto rounded-2xl", previewTransformClass)}>
-                                <Document
-                                  file={activePreviewUrl}
-                                  onLoadSuccess={(pdf) => handlePdfLoadSuccess(activeDocument.tempId, pdf)}
-                                  loading={<div className="py-20 text-center text-sm font-semibold">Loading PDF preview...</div>}
-                                  error={<div className="py-20 text-center text-sm font-semibold text-rose-500">PDF preview could not be rendered.</div>}
-                                >
-                                  <Page
-                                    pageNumber={activeDocument.selectedPages[0] || 1}
-                                    width={420}
-                                    renderTextLayer={false}
-                                    renderAnnotationLayer={false}
-                                  />
-                                </Document>
-                              </div>
-                            ) : null}
-
-                            {previewMode === "placeholder" ? (
-                              <div className="max-w-md text-center">
-                                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-brand-500/12 text-brand-600 dark:text-brand-300">
-                                  {activeDocument.fileType === "pdf" ? <Monitor className="h-10 w-10" /> : <FileText className="h-10 w-10" />}
-                                </div>
-                                <p className="mt-5 text-xl font-bold">Live print preview is available for PDF and image files</p>
-                                <p className="mt-3 text-sm font-medium leading-7 text-slate-600 dark:text-slate-300">
-                                  DOCX and PPTX files still need a conversion step before they can render visually here. The current
-                                  settings panel will still capture the print instructions for this file.
-                                </p>
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
+                        )}
                       </div>
 
-                      {previewMode === "pdf" && activePreviewUrl ? (
-                        <div className="mt-5">
-                          <div className="mb-3 flex items-center justify-between">
-                            <p className="text-sm font-bold">PDF page thumbnails</p>
-                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-300">
-                              Click pages to include or exclude them from the page range
-                            </p>
-                          </div>
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            {Array.from({ length: activeDocument.pdfPageCount || 0 }, (_, index) => index + 1).map((pageNumber) => {
-                              const isSelected =
-                                activeDocument.selectedPages.length === 0 || activeDocument.selectedPages.includes(pageNumber);
-
-                              return (
-                                <button
-                                  key={pageNumber}
-                                  type="button"
-                                  onClick={() => togglePdfPage(activeDocument.tempId, pageNumber)}
-                                  className={cn(
-                                    "overflow-hidden rounded-2xl border p-2 text-left transition",
-                                    isSelected
-                                      ? "border-brand-400 bg-brand-50/70 dark:bg-brand-950/20"
-                                      : "opacity-55 hover:opacity-100"
-                                  )}
-                                >
-                                  <Document file={activePreviewUrl} loading={<div className="h-[120px] animate-pulse rounded-xl bg-slate-200/60" />}>
-                                    <Page
-                                      pageNumber={pageNumber}
-                                      width={110}
-                                      renderTextLayer={false}
-                                      renderAnnotationLayer={false}
-                                    />
-                                  </Document>
-                                  <p className="mt-2 text-xs font-bold">Page {pageNumber}</p>
-                                </button>
-                              );
-                            })}
-                          </div>
+                      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        <div className="rounded-2xl border border-orange-200/70 bg-white/82 px-4 py-3">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Filename</p>
+                          <p className="mt-2 break-words text-sm font-bold">{activeDocument.name}</p>
                         </div>
-                      ) : null}
-
-                      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-2xl border px-4 py-3">
+                        <div className="rounded-2xl border border-orange-200/70 bg-white/82 px-4 py-3">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Page count</p>
+                          <p className="mt-2 text-sm font-bold">{activePageCount}</p>
+                        </div>
+                        <div className="rounded-2xl border border-orange-200/70 bg-white/82 px-4 py-3">
                           <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Requested service</p>
                           <p className="mt-2 text-sm font-bold">{activeDocument.settings.serviceTitle}</p>
                         </div>
-                        <div className="rounded-2xl border px-4 py-3">
+                        <div className="rounded-2xl border border-orange-200/70 bg-white/82 px-4 py-3">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Paper size</p>
+                          <p className="mt-2 text-sm font-bold">{activeDocument.settings.paperSize}</p>
+                        </div>
+                        <div className="rounded-2xl border border-orange-200/70 bg-white/82 px-4 py-3">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Copies</p>
+                          <p className="mt-2 text-sm font-bold">{copiesLabel}</p>
+                        </div>
+                        <div className="rounded-2xl border border-orange-200/70 bg-white/82 px-4 py-3">
                           <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Page range</p>
                           <p className="mt-2 text-sm font-bold">{activeDocument.settings.pageRange}</p>
-                        </div>
-                        <div className="rounded-2xl border px-4 py-3">
-                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Copies</p>
-                          <p className="mt-2 text-sm font-bold">{activeDocument.settings.copies}</p>
-                        </div>
-                        <div className="rounded-2xl border px-4 py-3">
-                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Finishing</p>
-                          <p className="mt-2 text-sm font-bold">
-                            {activeDocument.settings.finishType || "standard"}
-                          </p>
-                        </div>
-                        <div className="rounded-2xl border px-4 py-3">
-                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Material / stock</p>
-                          <p className="mt-2 text-sm font-bold">{activeDocument.settings.materialType || "standard_stock"}</p>
-                        </div>
-                        <div className="rounded-2xl border px-4 py-3">
-                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Variant</p>
-                          <p className="mt-2 text-sm font-bold">{activeDocument.settings.productVariant || "standard"}</p>
-                        </div>
-                        <div className="rounded-2xl border px-4 py-3">
-                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Priority</p>
-                          <p className="mt-2 text-sm font-bold">{activeDocument.settings.priorityLevel || "standard"}</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="grid min-h-[420px] place-items-center rounded-[32px] border border-dashed bg-white/30 p-6 text-center">
+                  <div className="grid min-h-[420px] place-items-center rounded-[32px] border border-dashed border-orange-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.74),rgba(255,243,235,0.72))] p-6 text-center">
                     <div className="max-w-md">
                       <Layers3 className="mx-auto h-12 w-12 text-brand-500" />
-                      <p className="mt-4 text-2xl font-bold">Your document studio will appear here</p>
+                      <p className="mt-4 text-2xl font-bold">Choose a file to preview</p>
                       <p className="mt-3 text-sm font-medium leading-7 text-slate-600 dark:text-slate-300">
-                        Add one or more files, then we'll let you configure paper size, color mode, page range, copies,
-                        finishing, and total pricing for each document.
+                        Add one or more files, then click a file from the left panel to see its thumbnail, filename, and page details here.
                       </p>
                     </div>
                   </div>
@@ -852,345 +835,17 @@ export function UploadPage() {
               </Card>
             </section>
 
-            <aside className="space-y-4">
-              <Card className="p-5">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Print settings</p>
-                {activeDocument ? (
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-bold">Requested service</label>
-                      <ServicePicker
-                        value={activeDocument.settings.serviceCode}
-                        items={serviceCatalog}
-                        groupedItems={groupedServiceCatalog}
-                        loading={serviceCatalogLoading}
-                        onSelect={(item) =>
-                          selectServiceForDocument(activeDocument.tempId, item)
-                        }
-                      />
-                      <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-                        Tag this file to the exact service you want, such as legal print, brochure printing, certificates, visiting cards, or stationery.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        type="button"
-                        variant={activeDocument.settings.colorMode === "bw" ? "primary" : "outline"}
-                        onClick={() => updateDocumentSettings(activeDocument.tempId, { colorMode: "bw" })}
-                      >
-                        B&W
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={activeDocument.settings.colorMode === "color" ? "secondary" : "outline"}
-                        onClick={() => updateDocumentSettings(activeDocument.tempId, { colorMode: "color" })}
-                      >
-                        Color
-                      </Button>
-                    </div>
-
-                    <div className="rounded-2xl border border-brand-400/18 bg-brand-500/8 px-4 py-4">
-                      <div className="flex items-start gap-3">
-                        <BriefcaseBusiness className="mt-0.5 h-5 w-5 text-brand-500" />
-                        <div>
-                          <p className="text-sm font-bold">Service-aware customization</p>
-                          <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                            This file is being configured as <span className="font-semibold text-slate-900 dark:text-white">{activeDocument.settings.serviceTitle}</span>.
-                            The options below adapt to this type of document so the order is closer to the final production requirement.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">{getPageSizeLabel(activeServiceCategory)}</label>
-                        <Select
-                          value={activeDocument.settings.paperSize}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { paperSize: event.target.value })}
-                        >
-                          {activePageSizeOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">Orientation</label>
-                        <Select
-                          value={activeDocument.settings.orientation}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { orientation: event.target.value })}
-                        >
-                          <option value="portrait">Portrait</option>
-                          <option value="landscape">Landscape</option>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">Pages</label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={activeDocument.settings.pages}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { pages: event.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">Copies</label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={activeDocument.settings.copies}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { copies: event.target.value })}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">Print side</label>
-                        <Select
-                          value={activeDocument.settings.printSide}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { printSide: event.target.value })}
-                        >
-                          <option value="single">Single side</option>
-                          <option value="double">Double side</option>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">
-                          {activeServiceCategory === "cards" ? "Edge / corner style" : "Binding"}
-                        </label>
-                        <Select
-                          value={activeDocument.settings.bindingType}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { bindingType: event.target.value })}
-                        >
-                          {activeServiceCategory === "cards" ? (
-                            <>
-                              <option value="none">Standard edge</option>
-                              <option value="staple">Rounded corners</option>
-                              <option value="spiral">Square card style</option>
-                              <option value="hard">Special cut shape</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="none">None</option>
-                              <option value="staple">Staple</option>
-                              <option value="spiral">Spiral</option>
-                              <option value="hard">Hard binding</option>
-                            </>
-                          )}
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">Page range</label>
-                        <Input
-                          value={activeDocument.settings.pageRange}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { pageRange: event.target.value })}
-                          placeholder="All or 1-5,8"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">Scaling</label>
-                        <Select
-                          value={activeDocument.settings.scaleType}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { scaleType: event.target.value })}
-                        >
-                          <option value="fit">Fit to page</option>
-                          <option value="actual">Actual size</option>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">
-                          {activeServiceCategory === "cards"
-                            ? "Finish"
-                            : activeServiceCategory === "gifts"
-                              ? "Branding finish"
-                              : "Finish type"}
-                        </label>
-                        <Select
-                          value={activeDocument.settings.finishType}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { finishType: event.target.value })}
-                        >
-                          {activeServiceCategory === "cards" ? (
-                            <>
-                              <option value="matte">Matte finish</option>
-                              <option value="gloss">Gloss finish</option>
-                              <option value="textured">Textured finish</option>
-                              <option value="premium">Premium laminated finish</option>
-                            </>
-                          ) : activeServiceCategory === "gifts" ? (
-                            <>
-                              <option value="premium">Premium print</option>
-                              <option value="branding">Logo branding</option>
-                              <option value="photo_finish">Photo finish</option>
-                              <option value="gift_box">Gift-ready packing</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="standard">Standard finish</option>
-                              <option value="premium">Premium finish</option>
-                              <option value="gloss">Gloss finish</option>
-                              <option value="matte">Matte finish</option>
-                            </>
-                          )}
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">
-                          {activeServiceCategory === "calendar"
-                            ? "Format"
-                            : activeServiceCategory === "office"
-                              ? "Material type"
-                              : "Material / stock"}
-                        </label>
-                        <Select
-                          value={activeDocument.settings.materialType}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { materialType: event.target.value })}
-                        >
-                          {activeServiceCategory === "cards" ? (
-                            <>
-                              <option value="premium_card">Premium card stock</option>
-                              <option value="standard_stock">Standard card stock</option>
-                              <option value="textured_stock">Textured stock</option>
-                              <option value="kraft_stock">Kraft stock</option>
-                            </>
-                          ) : activeServiceCategory === "calendar" ? (
-                            <>
-                              <option value="desk_format">Desk calendar format</option>
-                              <option value="wall_format">Wall calendar format</option>
-                              <option value="planner_format">Planner format</option>
-                            </>
-                          ) : activeServiceCategory === "gifts" ? (
-                            <>
-                              <option value="gift_surface">Gift surface</option>
-                              <option value="ceramic">Ceramic / mug</option>
-                              <option value="photo_board">Photo board</option>
-                              <option value="cardboard_box">Gift box</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="standard_stock">Standard stock</option>
-                              <option value="bond_paper">Bond paper</option>
-                              <option value="thick_stock">Thick stock</option>
-                              <option value="office_material">Office material</option>
-                            </>
-                          )}
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">
-                          {activeServiceCategory === "cards" ? "Card / product variant" : "Variant"}
-                        </label>
-                        <Select
-                          value={activeDocument.settings.productVariant}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { productVariant: event.target.value })}
-                        >
-                          {activeServiceCategory === "cards" ? (
-                            <>
-                              <option value="standard">Standard</option>
-                              <option value="classic">Classic</option>
-                              <option value="rounded">Rounded</option>
-                              <option value="custom_shape">Custom shape</option>
-                            </>
-                          ) : activeServiceCategory === "stationery" ? (
-                            <>
-                              <option value="office_set">Office set</option>
-                              <option value="single_sheet">Single sheet</option>
-                              <option value="bulk_pack">Bulk pack</option>
-                            </>
-                          ) : activeServiceCategory === "gifts" ? (
-                            <>
-                              <option value="single_piece">Single piece</option>
-                              <option value="gift_combo">Gift combo</option>
-                              <option value="custom_name">Custom name print</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="document_set">Document set</option>
-                              <option value="single_file">Single file</option>
-                              <option value="bulk_run">Bulk run</option>
-                            </>
-                          )}
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">Priority</label>
-                        <Select
-                          value={activeDocument.settings.priorityLevel}
-                          onChange={(event) => updateDocumentSettings(activeDocument.tempId, { priorityLevel: event.target.value })}
-                        >
-                          <option value="standard">Standard</option>
-                          <option value="same_day">Same day</option>
-                          <option value="urgent">Urgent</option>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-bold">
-                        {activeServiceCategory === "cards" ? "Custom size or shape notes" : "Custom size / layout"}
-                      </label>
-                      <Input
-                        value={activeDocument.settings.customSize}
-                        onChange={(event) => updateDocumentSettings(activeDocument.tempId, { customSize: event.target.value })}
-                        placeholder={
-                          activeServiceCategory === "cards"
-                            ? "Example: 3.5 x 2 inch, rounded corner, oval cut"
-                            : activeServiceCategory === "calendar"
-                              ? "Example: desk format, 8 x 6 inch, 12 leaves"
-                              : "Example: custom dimensions, margin or fold requirement"
-                        }
-                      />
-                    </div>
-
-                    <label className="flex items-center justify-between rounded-2xl border px-4 py-3">
-                      <span className="text-sm font-bold">
-                        {activeServiceCategory === "cards" || activeServiceCategory === "gifts" ? "Protective finish" : "Add lamination"}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={activeDocument.settings.lamination}
-                        onChange={(event) => updateDocumentSettings(activeDocument.tempId, { lamination: event.target.checked })}
-                        className="h-4 w-4"
-                      />
-                    </label>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-bold">Document notes</label>
-                      <Textarea
-                        value={activeDocument.settings.notes}
-                        onChange={(event) => updateDocumentSettings(activeDocument.tempId, { notes: event.target.value })}
-                        placeholder={
-                          activeServiceCategory === "cards"
-                            ? "Mention brand colors, front/back text, QR code, quantity split, or finishing notes."
-                            : activeServiceCategory === "gifts"
-                              ? "Mention name personalization, logo placement, gift text, or packaging notes."
-                              : "Mention margins, print quality, cover page, folds, finishing, or any special instruction."
-                        }
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
-                    Select a document to customize its printing setup.
-                  </p>
-                )}
-              </Card>
-
+            <aside className="space-y-4 xl:sticky xl:top-0 xl:flex xl:max-h-screen xl:flex-col xl:overflow-y-auto xl:pr-1">
+              <PrintSettings
+                activeDocument={activeDocument}
+                activeServiceCategory={activeServiceCategory}
+                pageSizeLabel={getPageSizeLabel(activeServiceCategory)}
+                pageSizeOptions={activePageSizeOptions}
+                serviceCatalog={serviceCatalog}
+                serviceCatalogLoading={serviceCatalogLoading}
+                onSelectService={(item) => selectServiceForDocument(activeDocument.tempId, item)}
+                onUpdateSettings={(patch) => updateDocumentSettings(activeDocument.tempId, patch)}
+              />
               <Card className="p-5">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Customer details</p>
                 <div className="mt-4 space-y-4">
@@ -1218,7 +873,6 @@ export function UploadPage() {
                         )}
                       >
                         <p className="text-sm font-semibold">Delivery</p>
-                        <p className="mt-1 text-xs leading-5 text-slate-600">Send the finished order to the customer's address.</p>
                       </button>
                       <button
                         type="button"
@@ -1231,7 +885,6 @@ export function UploadPage() {
                         )}
                       >
                         <p className="text-sm font-semibold">Pickup</p>
-                        <p className="mt-1 text-xs leading-5 text-slate-600">Customer will collect the order directly from the shop.</p>
                       </button>
                     </div>
                   </div>
@@ -1265,76 +918,92 @@ export function UploadPage() {
                 </div>
               </Card>
 
-              <Card className="p-5">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Payment</p>
-                <div className="mt-4 space-y-4">
-                  <div className="rounded-[28px] border border-white/60 bg-white/74 p-4 shadow-[0_16px_36px_rgba(148,75,37,0.1)]">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">Pay with the shop UPI QR</p>
-                        <p className="mt-1 text-xs leading-6 text-slate-600">
-                          Scan the QR, complete the payment, then upload the screenshot below as proof.
-                        </p>
-                      </div>
-                      <a
-                        href={upiQrImage}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-full border border-slate-300/80 bg-white/92 px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:bg-white"
-                      >
-                        Open image
-                      </a>
-                    </div>
-
-                    <div className="mt-4 overflow-hidden rounded-[24px] border border-white/60 bg-white/90 p-3">
-                      <img src={upiQrImage} alt="UPI QR code" className="mx-auto w-full max-w-[300px] rounded-[20px] object-contain" />
-                    </div>
-                  </div>
-
+              <details className="rounded-[28px] border border-white/60 bg-white/86 shadow-[0_18px_40px_rgba(15,23,42,0.12)]" open={isCustomerReadyForPayment}>
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 [&::-webkit-details-marker]:hidden">
                   <div>
-                    <label className="mb-2 block text-sm font-bold">Payment screenshot</label>
-                    <input
-                      ref={paymentInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) => setPaymentProof(event.target.files?.[0] || null)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => paymentInputRef.current?.click()}
-                      className="flex w-full items-center justify-between gap-3 rounded-2xl border border-dashed border-orange-300/70 bg-white/88 px-4 py-4 text-left text-slate-900 transition hover:bg-white"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {paymentScreenshot?.file?.name || "Upload payment screenshot"}
-                        </p>
-                        <p className="mt-1 text-xs leading-5 text-slate-500">Accepted: image proof of the completed payment.</p>
-                      </div>
-                      <UploadCloud className="h-5 w-5 text-orange-600" />
-                    </button>
-                    {errors.paymentScreenshot ? <p className="mt-2 text-sm text-rose-500">{errors.paymentScreenshot}</p> : null}
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Payment</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">UPI QR and payment proof</p>
                   </div>
-
-                  {paymentScreenshot ? (
-                    <div className="overflow-hidden rounded-[24px] border border-white/60 bg-white/78 p-3">
-                      {paymentScreenshot.previewUrl ? (
-                        <img
-                          src={paymentScreenshot.previewUrl}
-                          alt="Payment screenshot preview"
-                          className="max-h-72 w-full rounded-[18px] object-contain"
-                        />
-                      ) : (
-                        <div className="rounded-[18px] border border-white/60 bg-white/90 px-4 py-6 text-center text-sm font-medium text-slate-600">
-                          {paymentScreenshot.file.name}
+                  <div className="text-right">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Current</p>
+                    <p className="text-sm font-semibold text-slate-800">{isCustomerReadyForPayment ? paymentScreenshot?.file?.name || "Pending proof" : "Locked"}</p>
+                  </div>
+                </summary>
+                <div className="border-t border-orange-100/80 px-5 pb-5 pt-4">
+                  {isCustomerReadyForPayment ? (
+                    <div className="space-y-4">
+                      <div className="rounded-[28px] border border-white/60 bg-white/74 p-4 shadow-[0_16px_36px_rgba(148,75,37,0.1)]">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-base font-bold text-slate-900">Pay with the shop UPI QR</p>
+                            <p className="mt-1 text-xs leading-6 text-slate-600">
+                              Scan the QR, complete the payment, then upload the screenshot below as proof.
+                            </p>
+                          </div>
+                          <a
+                            href={upiQrImage}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-full border border-slate-300/80 bg-white/92 px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:bg-white"
+                          >
+                            Open image
+                          </a>
                         </div>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-              </Card>
 
-              <Card className="p-5">
+                        <div className="mt-4 overflow-hidden rounded-[24px] border border-white/60 bg-white/90 p-3">
+                          <img src={upiQrImage} alt="UPI QR code" className="mx-auto w-full max-w-[300px] rounded-[20px] object-contain" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-bold">Payment screenshot</label>
+                        <input
+                          ref={paymentInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(event) => setPaymentProof(event.target.files?.[0] || null)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => paymentInputRef.current?.click()}
+                          className="flex min-h-[92px] w-full items-center justify-between gap-4 rounded-[24px] border-2 border-dashed border-orange-400 bg-gradient-to-r from-amber-50 via-white to-orange-50 px-5 py-5 text-left text-slate-900 shadow-[0_16px_34px_rgba(249,115,22,0.14)] transition hover:border-orange-500 hover:from-amber-100 hover:to-orange-100 hover:shadow-[0_20px_40px_rgba(249,115,22,0.18)]"
+                        >
+                          <div>
+                            <p className="text-base font-bold text-slate-900">
+                              {paymentScreenshot?.file?.name || "Upload payment screenshot"}
+                            </p>
+                            <p className="mt-1 text-sm leading-6 text-slate-600">Accepted: image proof of the completed payment.</p>
+                          </div>
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white shadow-[0_10px_24px_rgba(249,115,22,0.26)]"><UploadCloud className="h-5 w-5" /></div>
+                        </button>
+                        {errors.paymentScreenshot ? <p className="mt-2 text-sm text-rose-500">{errors.paymentScreenshot}</p> : null}
+                      </div>
+
+                      {paymentScreenshot ? (
+                        <div className="overflow-hidden rounded-[24px] border border-white/60 bg-white/78 p-3">
+                          {paymentScreenshot.previewUrl ? (
+                            <img
+                              src={paymentScreenshot.previewUrl}
+                              alt="Payment screenshot preview"
+                              className="max-h-72 w-full rounded-[18px] object-contain"
+                            />
+                          ) : (
+                            <div className="rounded-[18px] border border-white/60 bg-white/90 px-4 py-6 text-center text-sm font-medium text-slate-600">
+                              {paymentScreenshot.file.name}
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/70 px-4 py-4 text-sm font-medium leading-6 text-slate-700">
+                      Enter the customer name and a valid phone number to unlock the QR payment section.
+                    </div>
+                  )}
+                </div>
+              </details>
+              <div className="rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] xl:sticky xl:bottom-0 xl:mt-auto xl:border-t-2 xl:border-orange-200/70">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Price summary</p>
                   {isQuoteLoading ? <LoaderCircle className="h-4 w-4 animate-spin text-brand-500" /> : null}
@@ -1344,8 +1013,8 @@ export function UploadPage() {
                     documents.map((document) => (
                       <div key={document.tempId} className="flex items-start justify-between gap-3 rounded-2xl border px-4 py-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-bold">{document.name}</p>
-                          <p className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          <p className="break-words text-sm font-bold leading-5">{document.name}</p>
+                          <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-600 dark:text-slate-300">
                             {document.settings.serviceTitle} | {document.settings.copies} copies | {document.settings.paperSize} |{" "}
                             {document.settings.colorMode === "color" ? "Color" : "B&W"}
                           </p>
@@ -1362,17 +1031,24 @@ export function UploadPage() {
                   )}
                 </div>
 
+                {customer.fulfillmentMethod === "delivery" ? (
+                  <div className="mt-4 flex items-center justify-between rounded-2xl border border-orange-200/70 bg-orange-50/60 px-4 py-3">
+                    <span className="text-sm font-semibold text-slate-700">Delivery charge</span>
+                    <span className="text-sm font-bold text-slate-900">{formatCurrency(totals.deliveryCharge || 0)}</span>
+                  </div>
+                ) : null}
+
                 <div className="mt-5 flex items-center justify-between border-t pt-4">
                   <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Estimated total</span>
                   <span className="text-xl font-bold">{formatCurrency(totals.total || 0)}</span>
                 </div>
 
                 <div className="mt-5 flex flex-col gap-3">
-                  <Button type="submit" disabled={isSubmitting}>
+                  <Button type="submit" disabled={isSubmitting} className="hidden w-full px-6 py-3.5 text-base md:inline-flex">
                     {isSubmitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
                     {isSubmitting ? "Submitting order..." : "Submit print order"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => window.open(whatsappLink, "_blank", "noopener,noreferrer")}>
+                  <Button type="button" variant="outline" className="w-full" onClick={() => window.open(whatsappLink, "_blank", "noopener,noreferrer")}>
                     <MessageCircleMore className="h-4 w-4" />
                     Send on WhatsApp
                   </Button>
@@ -1384,14 +1060,24 @@ export function UploadPage() {
                     <p className="mt-2 font-bold">Tracking ID: {successMessage.orderId}</p>
                   </div>
                 ) : null}
-              </Card>
+              </div>
             </aside>
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-orange-200/70 bg-white/95 p-4 shadow-[0_-18px_36px_rgba(15,23,42,0.12)] backdrop-blur md:hidden">
+              <Button type="submit" disabled={isSubmitting} className="w-full px-6 py-3.5 text-base">
+                {isSubmitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
+                {isSubmitting ? "Submitting order..." : "Submit print order"}
+              </Button>
+            </div>
           </form>
         </div>
       </section>
     </>
   );
 }
+
+
+
+
 
 
 

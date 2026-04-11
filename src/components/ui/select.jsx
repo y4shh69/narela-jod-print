@@ -68,25 +68,25 @@ export function Select({ className, children, value, onChange, placeholder = "Se
   }, {});
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className={cn("relative", open ? "z-[140]" : "z-[20]")}>
       <button
         type="button"
         onClick={() => !disabled && setOpen((current) => !current)}
         disabled={disabled}
         className={cn(
-          "flex w-full items-center justify-between gap-3 rounded-xl border border-white/60 bg-white/82 px-4 py-3 text-left text-slate-800 shadow-[0_14px_36px_rgba(148,75,37,0.12)] backdrop-blur-xl transition hover:border-orange-300/70 focus:outline-none focus:ring-2 focus:ring-orange-300/25",
+          "flex min-h-[48px] w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-left text-slate-900 shadow-sm transition hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-blue-500",
           disabled ? "cursor-not-allowed opacity-60" : "",
           className
         )}
         {...props}
       >
-        <span className="truncate text-sm font-semibold">{selectedOption?.label || placeholder}</span>
+        <span className="block flex-1 whitespace-normal break-words pr-2 text-sm font-semibold leading-5 text-slate-900 md:text-[15px]">{selectedOption?.label || placeholder}</span>
         <ChevronDown className={cn("h-4 w-4 shrink-0 text-slate-500 transition", open ? "rotate-180" : "")} />
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-xl border border-white/60 bg-white/88 shadow-[0_24px_60px_rgba(148,75,37,0.14)] backdrop-blur-2xl">
-          <div className="max-h-80 overflow-y-auto p-2">
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[160] min-w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_24px_56px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/70">
+          <div className="max-h-72 overflow-y-auto p-2">
             {Object.entries(groupedOptions).map(([group, groupOptions]) => (
               <div key={group} className="pb-2">
                 {group !== "__ungrouped__" ? (
@@ -106,13 +106,11 @@ export function Select({ className, children, value, onChange, placeholder = "Se
                           onChange?.({ target: { value: option.value } });
                           setOpen(false);
                         }}
-                        className={cn(
-                          "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition",
-                          active ? "bg-gradient-to-r from-amber-200/90 via-orange-100/90 to-rose-100/90" : "hover:bg-white",
+                        className={cn("flex w-full items-center justify-between gap-3 rounded-lg px-3 py-3 text-left transition", active ? "bg-gradient-to-r from-amber-200 via-orange-100 to-rose-100" : "hover:bg-slate-50",
                           option.disabled ? "cursor-not-allowed opacity-40" : ""
                         )}
                       >
-                        <span className="truncate text-sm font-semibold text-slate-800">{option.label}</span>
+                        <span className="block flex-1 whitespace-normal break-words pr-2 text-sm font-semibold leading-5 text-slate-800">{option.label}</span>
                         {active ? <Check className="h-4 w-4 shrink-0 text-orange-600" /> : null}
                       </button>
                     );
@@ -126,3 +124,6 @@ export function Select({ className, children, value, onChange, placeholder = "Se
     </div>
   );
 }
+
+
+

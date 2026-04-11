@@ -2,5 +2,8 @@ package com.narelaprint.backend.dto;
 
 import java.util.List;
 
-public record QuoteRequest(List<QuoteItemRequest> items) {
+public record QuoteRequest(
+        List<QuoteItemRequest> items,
+        String fulfillmentMethod
+) {
 }

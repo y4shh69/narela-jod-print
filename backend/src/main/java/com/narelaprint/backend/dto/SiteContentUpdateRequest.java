@@ -8,6 +8,7 @@ public record SiteContentUpdateRequest(
         Boolean shopOpen,
         String turnaroundTime,
         String primaryMetricLabel,
-        String secondaryMetricLabel
+        String secondaryMetricLabel,
+        Integer deliveryCharge
 ) {
 }

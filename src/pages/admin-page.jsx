@@ -12,6 +12,7 @@ import {
   RefreshCcw,
   Search,
   Sparkles,
+  Trash2,
   Truck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -44,6 +45,7 @@ const newServiceInitialState = {
   category: "Printing",
   description: "",
   priceLabel: "From Rs 99",
+  basePrice: 99,
   unitLabel: "starting price",
   featured: false,
   active: true,
@@ -202,6 +204,7 @@ export function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
+  const [deletingId, setDeletingId] = useState("");
   const [expandedOrderId, setExpandedOrderId] = useState("");
   const [openStatusId, setOpenStatusId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -215,6 +218,7 @@ export function AdminPage() {
     turnaroundTime: "",
     primaryMetricLabel: "",
     secondaryMetricLabel: "",
+    deliveryCharge: 30,
   });
   const [siteContentLoading, setSiteContentLoading] = useState(true);
   const [siteContentSaving, setSiteContentSaving] = useState(false);
@@ -283,6 +287,7 @@ export function AdminPage() {
         turnaroundTime: payload.turnaroundTime || "",
         primaryMetricLabel: payload.primaryMetricLabel || "",
         secondaryMetricLabel: payload.secondaryMetricLabel || "",
+        deliveryCharge: payload.deliveryCharge ?? 30,
       });
     } finally {
       setSiteContentLoading(false);
@@ -432,6 +437,7 @@ async function addServiceItem() {
       category: newService.category.trim() || "Printing",
       description: newService.description.trim() || "Professional print and stationery support.",
       priceLabel: newService.priceLabel.trim() || "From Rs 99",
+      basePrice: Number(newService.basePrice) || 99,
       unitLabel: newService.unitLabel.trim() || "starting price",
       featured: newService.featured,
       active: newService.active,
@@ -504,6 +510,7 @@ async function saveSiteContent() {
       turnaroundTime: payload.turnaroundTime || "",
       primaryMetricLabel: payload.primaryMetricLabel || "",
       secondaryMetricLabel: payload.secondaryMetricLabel || "",
+      deliveryCharge: payload.deliveryCharge ?? 30,
     });
 
     showToast({
@@ -635,6 +642,57 @@ async function removeServiceItem(code) {
     }
   }
 
+  async function deleteOrder(orderId) {
+    if (!orderId) return;
+
+    const confirmed = window.confirm(
+      `Delete order ${orderId}?\n\nThis will permanently remove the order and delete its uploaded files from storage.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(orderId);
+      const nextOrders = orders.filter((order) => order.id !== orderId);
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      let payload = {};
+      try {
+        payload = await response.json();
+      } catch {
+        payload = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to delete the order.");
+      }
+
+      setOrders(nextOrders);
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[orderId];
+        return next;
+      });
+      setExpandedOrderId((current) => (current === orderId ? nextOrders[0]?.id || "" : current));
+      setOpenStatusId((current) => (current === orderId ? "" : current));
+
+      showToast({
+        title: "Order deleted",
+        description: `Order ${orderId} has been removed.`,
+      });
+    } catch (error) {
+      showToast({
+        title: "Delete failed",
+        description: error.message || "The order could not be deleted.",
+        variant: "error",
+      });
+    } finally {
+      setDeletingId("");
+    }
+  }
+
   return (
     <>
       <Seo
@@ -746,6 +804,10 @@ async function removeServiceItem(code) {
                     <label className="mb-2 block text-sm font-semibold text-slate-700">Secondary metric label</label>
                     <Input value={siteContent.secondaryMetricLabel} onChange={(event) => setSiteContentDraft({ secondaryMetricLabel: event.target.value })} />
                   </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Delivery charge (Rs)</label>
+                    <Input type="number" min="0" value={siteContent.deliveryCharge} onChange={(event) => setSiteContentDraft({ deliveryCharge: Number(event.target.value) || 0 })} />
+                  </div>
                   <div className="admin-soft-panel rounded-2xl px-4 py-4 text-sm leading-6 text-slate-600">
                     These counts stay automatic. You control the wording, the visible status text, and which banner set the homepage slider uses.
                   </div>
@@ -817,7 +879,7 @@ async function removeServiceItem(code) {
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-3 rounded-2xl border border-white/55 bg-white/48 p-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1fr_1fr_1.2fr_0.8fr_0.75fr_auto]">
+              <div className="mt-5 grid gap-3 rounded-2xl border border-white/55 bg-white/48 p-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1fr_1fr_1.2fr_0.75fr_0.7fr_0.8fr_0.75fr_auto]">
                 <div>
                   <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">New service title</label>
                   <Input
@@ -856,6 +918,16 @@ async function removeServiceItem(code) {
                   />
                 </div>
                 <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Base price (Rs)</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={newService.basePrice}
+                    onChange={(event) => setNewServiceDraft({ basePrice: Number(event.target.value) || 0 })}
+                    placeholder="99"
+                  />
+                </div>
+                <div>
                   <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Unit</label>
                   <Input
                     value={newService.unitLabel}
@@ -869,7 +941,7 @@ async function removeServiceItem(code) {
                     Add service
                   </Button>
                 </div>
-                <div className="lg:col-span-6 flex flex-wrap gap-3">
+                <div className="lg:col-span-7 flex flex-wrap gap-3">
                   <button
                     type="button"
                     onClick={() => setNewServiceDraft({ active: !newService.active })}
@@ -907,7 +979,7 @@ async function removeServiceItem(code) {
                   filteredServiceCatalog.map((item) => (
                     <div
                       key={item.code}
-                      className="grid gap-3 rounded-2xl border border-white/55 bg-white/52 px-4 py-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_0.55fr_auto]"
+                      className="grid gap-3 rounded-2xl border border-white/55 bg-white/52 px-4 py-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1.2fr_0.8fr_0.55fr_0.5fr_0.5fr_0.55fr_0.55fr_auto]"
                     >
                       <div>
                         <p className="text-sm font-semibold text-slate-900">{item.title}</p>
@@ -917,6 +989,10 @@ async function removeServiceItem(code) {
                       <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Price label</label>
                         <Input value={item.priceLabel} onChange={(event) => setServiceItemDraft(item.code, { priceLabel: event.target.value })} />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Base price</label>
+                        <Input type="number" min="1" value={item.basePrice ?? 0} onChange={(event) => setServiceItemDraft(item.code, { basePrice: Number(event.target.value) || 0 })} />
                       </div>
                       <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Unit</label>
@@ -1079,6 +1155,16 @@ async function removeServiceItem(code) {
                                 {savingId === order.id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
                                 {savingId === order.id ? "Saving..." : "Save"}
                               </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => deleteOrder(order.id)}
+                                disabled={deletingId === order.id || savingId === order.id}
+                                className="h-11 border-rose-300/70 bg-rose-100/90 !text-rose-700 shadow-[0_14px_30px_rgba(244,63,94,0.12)] hover:bg-rose-200/90"
+                              >
+                                {deletingId === order.id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                {deletingId === order.id ? "Deleting..." : "Delete"}
+                              </Button>
                               <button
                                 type="button"
                                 onClick={() => setExpandedOrderId((current) => (current === order.id ? "" : order.id))}
@@ -1189,6 +1275,8 @@ async function removeServiceItem(code) {
     </>
   );
 }
+
+
 
 
 

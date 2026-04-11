@@ -34,6 +34,9 @@ public class ServiceCatalogItem {
     @Column(nullable = false)
     private String priceLabel;
 
+    // Nullable for backward-compatible schema updates; normalized to a default in service layer.
+    private Integer basePrice;
+
     @Column(nullable = false)
     private String unitLabel;
 

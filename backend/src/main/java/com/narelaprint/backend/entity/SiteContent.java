@@ -44,6 +44,9 @@ public class SiteContent {
     @Column(nullable = false)
     private String secondaryMetricLabel;
 
+    // Nullable for backward-compatible schema updates; normalized to a default in service layer.
+    private Integer deliveryCharge;
+
     private Instant updatedAt;
 
     @PrePersist
@@ -54,6 +57,9 @@ public class SiteContent {
         if (shopOpen == null) {
             shopOpen = true;
         }
+        if (deliveryCharge == null) {
+            deliveryCharge = 0;
+        }
         updatedAt = Instant.now();
     }
 
@@ -61,6 +67,9 @@ public class SiteContent {
     void onUpdate() {
         if (shopOpen == null) {
             shopOpen = true;
+        }
+        if (deliveryCharge == null) {
+            deliveryCharge = 0;
         }
         updatedAt = Instant.now();
     }

@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
-import { LoaderCircle, PackageCheck, Search, Sparkles, Stars } from "lucide-react";
+import { CheckCircle2, Clock, LoaderCircle, Package, PackageCheck, Printer, Search, Sparkles, Truck, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { useToast } from "../components/toast-provider";
-import { getOrderStatusMeta, getTrackingProgress, orderStatusTimeline } from "../lib/order-status";
+import { getOrderStatusMeta } from "../lib/order-status";
 import { Seo } from "../lib/seo";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 
@@ -70,8 +70,23 @@ export function TrackOrderPage() {
   }
 
   const statusMeta = order ? getOrderStatusMeta(order.orderStatus) : null;
-  const progress = order ? getTrackingProgress(order.orderStatus) : 0;
   const fulfillmentMeta = order ? getFulfillmentMeta(order.fulfillmentMethod, order.address) : null;
+
+  const trackingSteps = [
+    { key: "submitted", label: "Submitted", Icon: Clock },
+    { key: "confirmed", label: "Confirmed", Icon: CheckCircle2 },
+    { key: "printing", label: "Printing", Icon: Printer },
+    { key: "ready", label: "Ready", Icon: Package },
+    { key: "delivered", label: "Delivered", Icon: Truck },
+  ];
+
+  const stepperStatusKey = order
+    ? order.orderStatus === "out_for_delivery"
+      ? "ready"
+      : order.orderStatus
+    : "submitted";
+
+  const currentStepIndex = trackingSteps.findIndex((step) => step.key === stepperStatusKey);
 
   return (
     <>
@@ -152,66 +167,137 @@ export function TrackOrderPage() {
                   className="tilt-shell"
                 >
                   <Card className="glass panel-3d border-white/35 p-6 sm:p-8">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">Current status</p>
-                      <h2 className="mt-3 text-3xl font-semibold tracking-tight">{statusMeta.label}</h2>
-                      <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-slate-600 dark:text-slate-300">
-                        {order.trackingMessage || statusMeta.description}
-                      </p>
-                    </div>
-                    <div className={cn("rounded-full border px-4 py-2 text-sm font-bold", statusMeta.tone)}>{statusMeta.label}</div>
-                  </div>
+                    <div className="flex flex-col gap-6">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-600 dark:text-indigo-300">
+                            Current status
+                          </p>
+                          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                            {statusMeta.label}
+                          </h2>
+                          <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-slate-600 dark:text-slate-300">
+                            {order.trackingMessage || statusMeta.description}
+                          </p>
+                        </div>
 
-                  {order.orderStatus !== "cancelled" ? (
-                    <div className="mt-8">
-                      <div className="h-2 overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-800/80">
-                        <motion.div
-                          className="h-full rounded-full bg-gradient-to-r from-brand-500 via-brand-400 to-emerald-400 transition-all duration-500"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress}%` }}
-                          transition={{ duration: 0.9, ease: "easeOut" }}
-                          style={{ width: `${progress}%` }}
-                        />
+                        <div
+                          className={cn(
+                            "inline-flex items-center gap-2 self-start rounded-full border px-4 py-2 text-xs font-semibold shadow-sm",
+                            order.orderStatus === "cancelled"
+                              ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+                              : "border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-indigo-50 text-slate-900 dark:border-indigo-900 dark:bg-indigo-950/35 dark:text-white"
+                          )}
+                        >
+                          {order.orderStatus === "cancelled" ? <XCircle className="h-4 w-4" /> : <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />}
+                          <span>{statusMeta.label}</span>
+                        </div>
                       </div>
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                        {orderStatusTimeline.map((step) => {
-                          const stepMeta = getOrderStatusMeta(step);
-                          const isActive = order.orderStatus === step;
-                          const isCompleted = orderStatusTimeline.indexOf(step) <= orderStatusTimeline.indexOf(order.orderStatus);
 
-                          return (
-                            <div
-                              key={step}
-                              className={cn(
-                                "flex min-h-20 items-center justify-center rounded-2xl border px-3 py-3 text-center transition",
-                                isActive
-                                  ? stepMeta.tone
-                                  : isCompleted
-                                    ? "border-brand-200 bg-brand-50/70 text-brand-700 dark:border-brand-900 dark:bg-brand-950/30 dark:text-brand-300"
-                                    : "border-slate-200 bg-white/30 text-slate-500 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-400"
-                              )}
-                            >
-                              <p className="max-w-[8ch] text-xs font-bold uppercase tracking-[0.12em] leading-tight [overflow-wrap:anywhere]">
-                                {stepMeta.timelineLabel || stepMeta.label}
-                              </p>
-                            </div>
-                          );
-                        })}
+                      {order.orderStatus !== "cancelled" ? (
+                        <div className="rounded-3xl border border-white/35 bg-white/35 p-4 shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur sm:p-5">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700 dark:text-slate-200">
+                              Tracking timeline
+                            </p>
+                            {order.orderStatus === "out_for_delivery" ? (
+                              <span className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-[0_10px_24px_rgba(79,70,229,0.22)]">
+                                Out for delivery
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="mt-4 overflow-x-auto pb-1">
+                            <ol className="flex min-w-[560px] items-start justify-between gap-2 sm:min-w-0 sm:gap-3">
+                              {trackingSteps.map((step, index) => {
+                                const isCompleted = currentStepIndex >= 0 && index < currentStepIndex;
+                                const isCurrent = currentStepIndex >= 0 && index === currentStepIndex;
+                                const isUpcoming = currentStepIndex >= 0 && index > currentStepIndex;
+                                const Icon = step.Icon;
+
+                                return (
+                                  <li key={step.key} className="flex flex-1 items-start gap-2">
+                                    <div className="flex flex-col items-center">
+                                      <motion.div
+                                        layout
+                                        transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                                        className={cn(
+                                          "grid h-10 w-10 place-items-center rounded-full border shadow-sm",
+                                          isCompleted
+                                            ? "border-emerald-300 bg-emerald-500 text-white shadow-[0_14px_28px_rgba(34,197,94,0.18)]"
+                                            : isCurrent
+                                              ? "border-indigo-300 bg-indigo-600 text-white shadow-[0_16px_34px_rgba(79,70,229,0.22)]"
+                                              : "border-slate-200 bg-white/80 text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300"
+                                        )}
+                                      >
+                                        {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                                      </motion.div>
+                                      <p
+                                        className={cn(
+                                          "mt-2 text-center text-xs font-semibold tracking-[0.08em]",
+                                          isCompleted
+                                            ? "text-emerald-700 dark:text-emerald-200"
+                                            : isCurrent
+                                              ? "text-indigo-700 dark:text-indigo-200"
+                                              : "text-slate-600 dark:text-slate-300"
+                                        )}
+                                      >
+                                        {step.label}
+                                      </p>
+                                    </div>
+
+                                    {index < trackingSteps.length - 1 ? (
+                                      <div className="mt-5 hidden flex-1 sm:block">
+                                        <div
+                                          className={cn(
+                                            "h-[3px] w-full rounded-full transition-colors",
+                                            isCompleted
+                                              ? "bg-emerald-400"
+                                              : isCurrent
+                                                ? "bg-indigo-300"
+                                                : "bg-slate-200/80 dark:bg-slate-700/70"
+                                          )}
+                                        />
+                                      </div>
+                                    ) : null}
+
+                                    {index < trackingSteps.length - 1 ? (
+                                      <div className="mt-5 block flex-1 sm:hidden">
+                                        <div
+                                          className={cn(
+                                            "h-[3px] w-full rounded-full transition-colors",
+                                            isCompleted
+                                              ? "bg-emerald-400"
+                                              : isCurrent
+                                                ? "bg-indigo-300"
+                                                : "bg-slate-200/80 dark:bg-slate-700/70"
+                                          )}
+                                        />
+                                      </div>
+                                    ) : null}
+                                  </li>
+                                );
+                              })}
+                            </ol>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-3xl border border-white/35 bg-white/35 px-5 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+                            Submitted date
+                          </p>
+                          <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{formatDate(order.createdAt)}</p>
+                        </div>
+                        <div className="rounded-3xl border border-white/35 bg-white/35 px-5 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+                            Last updated
+                          </p>
+                          <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{formatDate(order.updatedAt || order.createdAt)}</p>
+                        </div>
                       </div>
                     </div>
-                  ) : null}
-
-                  <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-3xl border border-white/35 bg-white/30 px-5 py-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Submitted</p>
-                      <p className="mt-2 text-sm font-semibold">{formatDate(order.createdAt)}</p>
-                    </div>
-                    <div className="rounded-3xl border border-white/35 bg-white/30 px-5 py-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Last update</p>
-                      <p className="mt-2 text-sm font-semibold">{formatDate(order.updatedAt || order.createdAt)}</p>
-                    </div>
-                  </div>
                   </Card>
                 </motion.div>
 

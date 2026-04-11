@@ -66,7 +66,6 @@ export function HomePage() {
 
   const shopMode = siteContent?.shopOpen === false ? "closed" : "open";
   const activeBanners = useMemo(() => shopBanners[shopMode], [shopMode]);
-  const currentBanner = activeBanners[bannerIndex % activeBanners.length];
 
   useEffect(() => {
     setBannerIndex(0);
@@ -92,98 +91,15 @@ export function HomePage() {
       <section className="relative overflow-hidden py-16 sm:py-24">
         <div className="section-shell">
           <div className="hero-gradient rounded-[28px] px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-            <div className="relative z-10 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-              <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-                <span className="hero-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700">
-                  <Sparkles className="h-4 w-4 text-brand-500" />
-                  {siteContent?.bannerLabel || "Modern print workflows for delivery-first teams"}
-                </span>
-                <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
-                  Fast Printing & Xerox Services
-                </h1>
-                <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-                  Upload files, set print preferences, and confirm your order in minutes. Built for students, startups, offices, and urgent same-day jobs.
-                </p>
-                <div className="mt-6 rounded-[24px] border border-black/5 bg-white/70 px-5 py-5 text-slate-900 shadow-[0_20px_48px_rgba(15,23,42,0.12)] backdrop-blur-md">
-                  {contentLoading ? (
-                    <div className="space-y-3">
-                      <Skeleton className="h-4 w-40 bg-slate-200/80" />
-                      <Skeleton className="h-6 w-full bg-slate-200/70" />
-                      <Skeleton className="h-5 w-4/5 bg-slate-200/70" />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-600">{siteContent?.shopStatus || "Open now"}</p>
-                        <span className={`rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.18em] ${siteContent?.shopOpen === false ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}>
-                          {siteContent?.shopOpen === false ? "Store closed" : "Store open"}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">{siteContent?.dailyOffer || "A4 B&W prints from Rs 2/page for online and delivery orders."}</p>
-                      <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{siteContent?.dailyMessage || "Same-day delivery is available on most standard jobs received before evening."}</p>
-                      <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-slate-700">
-                        <span className="rounded-full border border-black/5 bg-white/80 px-3 py-2 backdrop-blur-sm">
-                          {siteContent?.primaryMetricLabel || "Jobs completed today"}: {siteContent?.primaryMetricValue || "0"}
-                        </span>
-                        <span className="rounded-full border border-black/5 bg-white/80 px-3 py-2 backdrop-blur-sm">
-                          {siteContent?.secondaryMetricLabel || "Orders in progress"}: {siteContent?.secondaryMetricValue || "0"}
-                        </span>
-                        <span className="rounded-full border border-black/5 bg-white/80 px-3 py-2 backdrop-blur-sm">
-                          {siteContent?.turnaroundTime || "Most jobs ready within 30-60 minutes"}
-                        </span>
-                      </div>
-                      {siteContent?.updatedAt ? (
-                        <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
-                          Updated {formatDate(siteContent.updatedAt)}
-                        </p>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  {heroBullets.map((item) => (
-                    <div key={item} className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/70 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm shadow-slate-900/10 backdrop-blur-sm">
-                      <CheckCircle2 className="h-4 w-4 text-brand-500" />
-                      {item}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link to="/upload">
-                    <Button className="w-full sm:w-auto">
-                      Upload File
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="secondary"
-                    className="w-full sm:w-auto"
-                    onClick={() => window.open(`https://wa.me/${whatsappNumber}`, "_blank", "noopener,noreferrer")}
-                  >
-                    Order on WhatsApp
-                  </Button>
-                </div>
-                <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  {highlights.map((item, index) => (
-                    <motion.div key={item.title} custom={index + 1} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-                      <div className="service-card h-full rounded-[20px] p-5 transition duration-300 hover:-translate-y-1">
-                        <item.icon className="h-5 w-5 text-brand-500" />
-                        <p className="mt-4 text-lg font-semibold text-slate-900">{item.title}</p>
-                        <p className="mt-3 text-sm leading-7 text-slate-600">{item.description}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-
+            <div className="relative z-10 space-y-10">
               <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="lg:pt-2"
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, delay: 0.15 }}
+                className="w-full"
               >
-                <div className="banner-showcase rounded-[32px] p-4 sm:p-5">
-                  <div className="relative overflow-hidden rounded-[28px] min-h-[520px] sm:min-h-[560px]">
+                <div className="banner-showcase rounded-[34px] p-3 sm:p-4 lg:p-5">
+                  <div className="relative overflow-hidden rounded-[30px] aspect-[16/8] min-h-[240px] sm:min-h-[320px] lg:min-h-[380px] xl:min-h-[430px]">
                     {activeBanners.map((banner, index) => (
                       <div
                         key={banner.image}
@@ -195,12 +111,13 @@ export function HomePage() {
                           className="h-full w-full object-cover"
                           style={{ objectPosition: banner.objectPosition || "center center" }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/78 via-slate-900/16 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/54 via-transparent to-white/8" />
                       </div>
                     ))}
 
+                    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/12 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 z-10 p-5 sm:p-6">
-                      <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-white/16 bg-slate-950/30 px-4 py-3 backdrop-blur-md">
+                      <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-white/20 bg-slate-950/32 px-4 py-3 backdrop-blur-md">
                         {activeBanners.map((banner, index) => (
                           <button
                             key={`${banner.eyebrow}-${index}`}
@@ -213,6 +130,97 @@ export function HomePage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </motion.div>
+
+              <motion.div initial="hidden" animate="visible" variants={fadeUp} className="max-w-6xl">
+                <div className="grid gap-8 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.72fr)] xl:items-start">
+                  <div>
+                    <span className="hero-panel inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-700">
+                      <Sparkles className="h-4 w-4 text-brand-500" />
+                      {siteContent?.bannerLabel || "Modern print workflows for delivery-first teams"}
+                    </span>
+                    <h1 className="mt-6 max-w-4xl text-5xl font-semibold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
+                      Fast Printing & Xerox Services
+                    </h1>
+                    <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600">
+                      Upload files, set print preferences, and confirm your order in minutes. Built for students, startups, offices, and urgent same-day jobs.
+                    </p>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      {heroBullets.map((item) => (
+                        <div key={item} className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/70 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm shadow-slate-900/10 backdrop-blur-sm">
+                          <CheckCircle2 className="h-4 w-4 text-brand-500" />
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                      <Link to="/upload">
+                        <Button className="w-full sm:w-auto">
+                          Upload File
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="secondary"
+                        className="w-full sm:w-auto"
+                        onClick={() => window.open(`https://wa.me/${whatsappNumber}`, "_blank", "noopener,noreferrer")}
+                      >
+                        Order on WhatsApp
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[26px] border border-black/5 bg-white/72 px-5 py-5 text-slate-900 shadow-[0_20px_48px_rgba(15,23,42,0.12)] backdrop-blur-md">
+                    {contentLoading ? (
+                      <div className="space-y-3">
+                        <Skeleton className="h-4 w-40 bg-slate-200/80" />
+                        <Skeleton className="h-6 w-full bg-slate-200/70" />
+                        <Skeleton className="h-5 w-4/5 bg-slate-200/70" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="inline-flex items-center rounded-full border border-amber-300/80 bg-gradient-to-r from-amber-300 via-orange-200 to-rose-200 px-4 py-2.5 text-xs font-extrabold uppercase tracking-[0.2em] text-slate-900 shadow-[0_12px_28px_rgba(249,115,22,0.22)]">
+                            {siteContent?.shopStatus || "Open now"}
+                          </span>
+                          <span className={`inline-flex items-center rounded-full border px-4 py-2.5 text-xs font-extrabold uppercase tracking-[0.18em] shadow-[0_12px_28px_rgba(15,23,42,0.14)] ${siteContent?.shopOpen === false ? "border-rose-300/85 bg-gradient-to-r from-rose-300 via-pink-200 to-orange-100 text-rose-900" : "border-emerald-300/85 bg-gradient-to-r from-emerald-300 via-lime-200 to-emerald-100 text-emerald-900"}`}>
+                            {siteContent?.shopOpen === false ? "Store closed" : "Store open"}
+                          </span>
+                        </div>
+                        <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">{siteContent?.dailyOffer || "A4 B&W prints from Rs 2/page for online and delivery orders."}</p>
+                        <p className="mt-3 text-sm leading-7 text-slate-600">{siteContent?.dailyMessage || "Same-day delivery is available on most standard jobs received before evening."}</p>
+                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                          <span className="rounded-[18px] border border-black/5 bg-white/82 px-4 py-3 text-sm font-semibold text-slate-700 backdrop-blur-sm">
+                            {siteContent?.primaryMetricLabel || "Jobs completed today"}: {siteContent?.primaryMetricValue || "0"}
+                          </span>
+                          <span className="rounded-[18px] border border-black/5 bg-white/82 px-4 py-3 text-sm font-semibold text-slate-700 backdrop-blur-sm">
+                            {siteContent?.secondaryMetricLabel || "Orders in progress"}: {siteContent?.secondaryMetricValue || "0"}
+                          </span>
+                          <span className="rounded-[18px] border border-black/5 bg-white/82 px-4 py-3 text-sm font-semibold text-slate-700 backdrop-blur-sm sm:col-span-2">
+                            {siteContent?.turnaroundTime || "Most jobs ready within 30-60 minutes"}
+                          </span>
+                        </div>
+                        {siteContent?.updatedAt ? (
+                          <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
+                            Updated {formatDate(siteContent.updatedAt)}
+                          </p>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {highlights.map((item, index) => (
+                    <motion.div key={item.title} custom={index + 1} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+                      <div className="service-card h-full rounded-[20px] p-5 transition duration-300 hover:-translate-y-1">
+                        <item.icon className="h-5 w-5 text-brand-500" />
+                        <p className="mt-4 text-lg font-semibold text-slate-900">{item.title}</p>
+                        <p className="mt-3 text-sm leading-7 text-slate-600">{item.description}</p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             </div>
@@ -329,4 +337,6 @@ export function HomePage() {
     </>
   );
 }
+
+
 

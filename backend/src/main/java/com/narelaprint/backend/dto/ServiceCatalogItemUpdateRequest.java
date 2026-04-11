@@ -6,6 +6,7 @@ public record ServiceCatalogItemUpdateRequest(
         String category,
         String description,
         String priceLabel,
+        Integer basePrice,
         String unitLabel,
         Boolean featured,
         Boolean active,

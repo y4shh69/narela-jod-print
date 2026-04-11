@@ -5,6 +5,7 @@ import java.util.List;
 public record QuoteResponse(
         List<QuoteItemResponse> items,
         Integer subtotal,
+        Integer deliveryCharge,
         Integer total
 ) {
 }

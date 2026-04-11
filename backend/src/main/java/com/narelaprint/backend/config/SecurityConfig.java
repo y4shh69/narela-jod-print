@@ -35,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/orders").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/orders/*/status").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/orders/*").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/site-content").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/service-catalog").authenticated()
                         .anyRequest().permitAll()

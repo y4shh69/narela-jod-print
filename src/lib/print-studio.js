@@ -103,11 +103,18 @@ export function getFileExtension(name = "") {
 
 export function createDocumentItem(file) {
   const extension = getFileExtension(file.name);
+  const previewMode = previewableImageTypes.includes(extension)
+    ? "image"
+    : previewableDocumentTypes.includes(extension)
+      ? "pdf"
+      : "placeholder";
+
   return {
     tempId: crypto.randomUUID(),
     file,
     name: file.name,
     fileType: extension || "file",
+    previewMode,
     previewUrl: supportedPreviewTypes.includes(extension) ? URL.createObjectURL(file) : "",
     pdfPageCount: extension === "pdf" ? 0 : null,
     selectedPages: [],
@@ -127,8 +134,9 @@ export function getPreviewMode(fileType) {
   return "placeholder";
 }
 
-export function buildQuotePayload(documents) {
+export function buildQuotePayload(documents, fulfillmentMethod = "delivery") {
   return {
+    fulfillmentMethod,
     items: documents.map((document) => ({
       tempId: document.tempId,
       displayName: document.name,
@@ -152,3 +160,4 @@ export function buildWhatsAppText(customer, documents, total) {
     `Hello, I want to place a print order.\nName: ${customer.name || "-"}\nPhone: ${customer.phone || "-"}\nFulfillment: ${fulfillmentLabel}\nAddress: ${customer.fulfillmentMethod === "pickup" ? "Pickup from shop" : customer.address || "-"}\nDocuments:\n${documentLines || "-"}\nEstimated total: Rs ${total || 0}`
   );
 }
+

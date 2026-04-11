@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -89,6 +91,17 @@ public class PrintStudioController {
         } catch (IllegalArgumentException exception) {
             HttpStatus status = "Order not found".equals(exception.getMessage()) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(java.util.Map.of("error", exception.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/orders/{publicId}")
+    public ResponseEntity<?> deleteOrder(@PathVariable String publicId) {
+        try {
+            orderService.deleteOrder(publicId);
+            return ResponseEntity.ok(Map.of("id", publicId));
+        } catch (IllegalArgumentException exception) {
+            HttpStatus status = "Order not found".equals(exception.getMessage()) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(Map.of("error", exception.getMessage()));
         }
     }
 

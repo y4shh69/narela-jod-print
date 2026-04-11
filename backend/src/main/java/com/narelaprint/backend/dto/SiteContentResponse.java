@@ -13,6 +13,7 @@ public record SiteContentResponse(
         String primaryMetricValue,
         String secondaryMetricLabel,
         String secondaryMetricValue,
+        Integer deliveryCharge,
         Instant updatedAt
 ) {
 }

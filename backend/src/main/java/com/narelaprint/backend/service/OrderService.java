@@ -11,7 +11,9 @@ import com.narelaprint.backend.entity.OrderItem;
 import com.narelaprint.backend.entity.PrintOrder;
 import com.narelaprint.backend.repository.PrintOrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OrderService {
 
@@ -62,6 +65,24 @@ public class OrderService {
         }
 
         return toResponse(order);
+    }
+
+    @Transactional
+    public void deleteOrder(String publicId) {
+        if (isBlank(publicId)) {
+            throw new IllegalArgumentException("Order ID is required");
+        }
+
+        PrintOrder order = printOrderRepository.findByPublicId(publicId.trim())
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        // Best-effort file cleanup before deleting the DB record.
+        deleteFileQuietly(order.getPaymentScreenshotUrl(), "payment screenshot", order.getPublicId());
+        for (OrderItem item : order.getItems()) {
+            deleteFileQuietly(item.getFileUrl(), "order item file", order.getPublicId());
+        }
+
+        printOrderRepository.delete(order);
     }
 
     public OrderResponse createOrder(
@@ -122,7 +143,7 @@ public class OrderService {
 
         for (int index = 0; index < items.size(); index++) {
             QuoteItemRequest itemRequest = items.get(index);
-            var priced = pricingService.calculate(itemRequest);
+            var priced = pricingService.calculate(itemRequest, normalizedMethod);
             StorageService.StoredFile storedFile = (files != null && index < files.length) ? storageService.store(files[index]) : null;
 
             OrderItem item = new OrderItem();
@@ -270,4 +291,17 @@ public class OrderService {
     private String digitsOnly(String value) {
         return value == null ? "" : value.replaceAll("\\D", "");
     }
+
+    private void deleteFileQuietly(String publicUrl, String label, String orderId) {
+        if (publicUrl == null || publicUrl.isBlank()) {
+            return;
+        }
+
+        try {
+            storageService.deleteByPublicUrl(publicUrl);
+        } catch (IOException exception) {
+            log.warn("Failed to delete {} for order {}: {}", label, orderId, publicUrl, exception);
+        }
+    }
 }
+
