@@ -225,6 +225,7 @@ export function AdminPage() {
   const [serviceCatalog, setServiceCatalog] = useState([]);
   const [serviceCatalogLoading, setServiceCatalogLoading] = useState(true);
   const [serviceCatalogSaving, setServiceCatalogSaving] = useState(false);
+  const [serviceImageCode, setServiceImageCode] = useState("");
   const [serviceSearch, setServiceSearch] = useState("");
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState("all");
   const [newService, setNewService] = useState(newServiceInitialState);
@@ -597,6 +598,75 @@ async function removeServiceItem(code) {
     });
   } finally {
     setServiceCatalogSaving(false);
+  }
+}
+
+async function uploadServiceImage(code, file) {
+  if (!code || !file) return;
+
+  try {
+    setServiceImageCode(code);
+    const form = new FormData();
+    form.append("image", file);
+
+    const response = await fetch(`/api/service-catalog/${code}/image`, {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to upload the service photo.");
+    }
+
+    setServiceCatalog((current) => current.map((item) => (item.code === code ? { ...item, ...payload } : item)));
+    showToast({
+      title: "Service photo updated",
+      description: "The new photo will appear on the Services page immediately.",
+    });
+  } catch (error) {
+    showToast({
+      title: "Upload failed",
+      description: error.message || "The service photo could not be uploaded.",
+      variant: "error",
+    });
+  } finally {
+    setServiceImageCode("");
+  }
+}
+
+async function removeServiceImage(code) {
+  if (!code) return;
+
+  const confirmed = window.confirm("Remove this service photo?");
+  if (!confirmed) return;
+
+  try {
+    setServiceImageCode(code);
+    const response = await fetch(`/api/service-catalog/${code}/image`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to remove the service photo.");
+    }
+
+    setServiceCatalog((current) => current.map((item) => (item.code === code ? { ...item, ...payload } : item)));
+    showToast({
+      title: "Photo removed",
+      description: "The service card will fall back to the icon-only design.",
+    });
+  } catch (error) {
+    showToast({
+      title: "Remove failed",
+      description: error.message || "The service photo could not be removed.",
+      variant: "error",
+    });
+  } finally {
+    setServiceImageCode("");
   }
 }
 
@@ -979,7 +1049,7 @@ async function removeServiceItem(code) {
                   filteredServiceCatalog.map((item) => (
                     <div
                       key={item.code}
-                      className="grid gap-3 rounded-2xl border border-white/55 bg-white/52 px-4 py-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1.2fr_0.8fr_0.55fr_0.5fr_0.5fr_0.55fr_0.55fr_auto]"
+                      className="grid gap-3 rounded-2xl border border-white/55 bg-white/52 px-4 py-4 shadow-[0_14px_30px_rgba(148,75,37,0.08)] lg:grid-cols-[1.2fr_0.8fr_0.55fr_0.5fr_0.95fr_0.5fr_0.55fr_0.55fr_auto]"
                     >
                       <div>
                         <p className="text-sm font-semibold text-slate-900">{item.title}</p>
@@ -997,6 +1067,55 @@ async function removeServiceItem(code) {
                       <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Unit</label>
                         <Input value={item.unitLabel} onChange={(event) => setServiceItemDraft(item.code, { unitLabel: event.target.value })} />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Photo</label>
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 overflow-hidden rounded-2xl border border-white/65 bg-white/80 shadow-sm">
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="grid h-full w-full place-items-center text-[11px] font-bold text-slate-400">No</div>
+                            )}
+                          </div>
+                          <div className="flex flex-1 flex-col gap-2">
+                            <input
+                              id={`service-image-${item.code}`}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0];
+                                event.target.value = "";
+                                if (file) uploadServiceImage(item.code, file);
+                              }}
+                            />
+                            <div className="flex gap-2">
+                              <label
+                                htmlFor={`service-image-${item.code}`}
+                                className={cn(
+                                  "inline-flex w-full cursor-pointer items-center justify-center rounded-2xl border px-3 py-3 text-sm font-semibold transition",
+                                  serviceImageCode === item.code
+                                    ? "border-indigo-300/70 bg-indigo-100/90 text-indigo-700"
+                                    : "border-white/65 bg-white/70 text-slate-700 hover:bg-white"
+                                )}
+                              >
+                                {serviceImageCode === item.code ? "Uploading..." : item.imageUrl ? "Change" : "Add"}
+                              </label>
+                              {item.imageUrl ? (
+                                <button
+                                  type="button"
+                                  onClick={() => removeServiceImage(item.code)}
+                                  disabled={serviceImageCode === item.code}
+                                  className="w-full rounded-2xl border border-rose-300/70 bg-rose-100/90 px-3 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-200/90 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  Remove
+                                </button>
+                              ) : null}
+                            </div>
+                            <p className="text-xs leading-5 text-slate-500">Shows on the Services page.</p>
+                          </div>
+                        </div>
                       </div>
                       <div className="flex items-end">
                         <button
@@ -1275,9 +1394,6 @@ async function removeServiceItem(code) {
     </>
   );
 }
-
-
-
 
 
 

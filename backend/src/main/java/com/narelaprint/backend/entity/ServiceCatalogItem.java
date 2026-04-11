@@ -40,6 +40,10 @@ public class ServiceCatalogItem {
     @Column(nullable = false)
     private String unitLabel;
 
+    private String imageName;
+
+    private String imageUrl;
+
     @Column(nullable = false)
     private Boolean featured;
 

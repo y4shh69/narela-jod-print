@@ -24,9 +24,21 @@ export function ContactPage() {
       return;
     }
 
+    const cleanedPhone = form.phone.replace(/\D/g, "");
+    const whatsappText = [
+      "New enquiry from website:",
+      `Name: ${form.name.trim()}`,
+      `Phone: ${cleanedPhone || form.phone.trim()}`,
+      "",
+      form.message.trim(),
+    ].join("\n");
+
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappText)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+
     showToast({
-      title: "Message received",
-      description: "This demo form is ready for backend wiring or email integration.",
+      title: "Opening WhatsApp",
+      description: "Send the enquiry message in WhatsApp to complete your request.",
     });
     setForm({ name: "", phone: "", message: "" });
   }
@@ -100,7 +112,7 @@ export function ContactPage() {
                   <Textarea value={form.message} onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))} />
                 </div>
                 <Button type="submit" className="w-full">
-                  Send enquiry
+                  Send enquiry on WhatsApp
                 </Button>
               </form>
             </Card>

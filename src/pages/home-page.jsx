@@ -8,6 +8,7 @@ import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Skeleton } from "../components/ui/skeleton";
 import { useToast } from "../components/toast-provider";
+import dtdcLogo from "../assets/dtdc logo.png";
 import { highlights, services, testimonials, whatsappNumber } from "../lib/constants";
 import { Seo } from "../lib/seo";
 import { shopBanners } from "../lib/shop-banners";
@@ -188,28 +189,25 @@ export function HomePage() {
                             {siteContent?.shopOpen === false ? "Store closed" : "Store open"}
                           </span>
                         </div>
-                        <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">{siteContent?.dailyOffer || "A4 B&W prints from Rs 2/page for online and delivery orders."}</p>
-                        <p className="mt-3 text-sm leading-7 text-slate-600">{siteContent?.dailyMessage || "Same-day delivery is available on most standard jobs received before evening."}</p>
-                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                          <span className="rounded-[18px] border border-black/5 bg-white/82 px-4 py-3 text-sm font-semibold text-slate-700 backdrop-blur-sm">
-                            {siteContent?.primaryMetricLabel || "Jobs completed today"}: {siteContent?.primaryMetricValue || "0"}
-                          </span>
-                          <span className="rounded-[18px] border border-black/5 bg-white/82 px-4 py-3 text-sm font-semibold text-slate-700 backdrop-blur-sm">
-                            {siteContent?.secondaryMetricLabel || "Orders in progress"}: {siteContent?.secondaryMetricValue || "0"}
-                          </span>
-                          <span className="rounded-[18px] border border-black/5 bg-white/82 px-4 py-3 text-sm font-semibold text-slate-700 backdrop-blur-sm sm:col-span-2">
-                            {siteContent?.turnaroundTime || "Most jobs ready within 30-60 minutes"}
-                          </span>
-                        </div>
-                        {siteContent?.updatedAt ? (
-                          <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
-                            Updated {formatDate(siteContent.updatedAt)}
-                          </p>
-                        ) : null}
-                      </>
-                    )}
+                         <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">{siteContent?.dailyOffer || "A4 B&W prints from Rs 2/page for online and delivery orders."}</p>
+                         <p className="mt-3 text-sm leading-7 text-slate-600">{siteContent?.dailyMessage || "Same-day delivery is available on most standard jobs received before evening."}</p>
+                         <div className="mt-6 flex items-center justify-between gap-5 rounded-[22px] border border-white/55 bg-white/82 px-5 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.10)] backdrop-blur-sm">
+                           <div className="min-w-0">
+                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500"></p>
+                             <p className="mt-2 text-base font-semibold text-slate-900">Partnership With</p>
+                           </div>
+                           <div className="shrink-0 rounded-2xl border border-slate-200/70 bg-white/95 px-5 py-4 shadow-[0_18px_38px_rgba(15,23,42,0.14)]">
+                             <img
+                               src={dtdcLogo}
+                               alt="DTDC"
+                               className="h-20 w-56 object-contain [transform:scale(2.05)] [transform-origin:center] mix-blend-multiply"
+                             />
+                           </div>
+                         </div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
 
                 <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {highlights.map((item, index) => (

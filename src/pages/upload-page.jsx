@@ -1,9 +1,12 @@
 import {
+  ArrowRight,
+  Copy,
   Layers3,
   LoaderCircle,
   MessageCircleMore,
   Trash2,
   UploadCloud,
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PrintSettings } from "../components/print-settings";
@@ -25,6 +28,8 @@ import {
   getServicePreset,
 } from "../lib/print-studio";
 import { cn, formatCurrency, formatFileType } from "../lib/utils";
+
+const LAST_ORDER_STORAGE_KEY = "xeroxwala_last_order";
 
 const customerInitialState = {
   name: "",
@@ -333,8 +338,29 @@ export function UploadPage() {
   const [serviceCatalog, setServiceCatalog] = useState([]);
   const [serviceCatalogLoading, setServiceCatalogLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [lastOrder, setLastOrder] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(LAST_ORDER_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
   const [totals, setTotals] = useState({ subtotal: 0, deliveryCharge: 0, total: 0 });
   const { showToast } = useToast();
+
+  function persistLastOrder(next) {
+    setLastOrder(next);
+    try {
+      if (next) {
+        window.localStorage.setItem(LAST_ORDER_STORAGE_KEY, JSON.stringify(next));
+      } else {
+        window.localStorage.removeItem(LAST_ORDER_STORAGE_KEY);
+      }
+    } catch {
+      // Storage can be blocked in private mode; ignore gracefully.
+    }
+  }
 
   const activeDocument = documents.find((document) => document.tempId === activeId) || documents[0] || null;
   const activeServiceCategory = getServiceCategory(activeDocument?.settings.serviceCode, activeDocument?.settings.serviceTitle);
@@ -605,6 +631,10 @@ export function UploadPage() {
         orderId: result.id,
         text: `Order submitted successfully. Use ${result.id} with your phone number on the Track Order page to check live updates.`,
       });
+      persistLastOrder({
+        orderId: result.id,
+        createdAt: Date.now(),
+      });
       showToast({
         title: "Order submitted",
         description:
@@ -642,7 +672,50 @@ export function UploadPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid gap-6 pb-28 md:pb-0 xl:grid-cols-[minmax(220px,280px)_minmax(0,1fr)_minmax(320px,380px)]">
+          {lastOrder?.orderId ? (
+            <Card className="mb-6 border border-emerald-200/70 bg-gradient-to-r from-emerald-50/90 via-white/80 to-emerald-50/80 p-5 shadow-[0_18px_44px_rgba(16,185,129,0.10)] backdrop-blur">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Order placed</p>
+                  <p className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl">
+                    Tracking ID: <span className="break-all">{lastOrder.orderId}</span>
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-600">Keep this ID to track order progress.</p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        await window.navigator.clipboard.writeText(lastOrder.orderId);
+                        showToast({ title: "Copied", description: "Tracking ID copied to clipboard." });
+                      } catch {
+                        showToast({ title: "Copy failed", description: "Select and copy the tracking ID manually.", variant: "error" });
+                      }
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy ID
+                  </Button>
+                  <Button type="button" onClick={() => (window.location.href = "/track")}>
+                    Track order
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => persistLastOrder(null)}
+                    className="inline-flex items-center justify-center rounded-xl border border-black/10 bg-white/70 px-4 py-3 text-sm font-semibold text-slate-700 shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:brightness-105"
+                    aria-label="Dismiss tracking banner"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </Card>
+          ) : null}
+
+          <form onSubmit={handleSubmit} className="grid gap-6 pb-28 md:pb-0 xl:grid-cols-[minmax(220px,300px)_minmax(0,1fr)_minmax(420px,520px)]">
             <aside className="space-y-4 xl:min-w-[220px]">
               <Card className="p-5">
                 <div
@@ -835,7 +908,7 @@ export function UploadPage() {
               </Card>
             </section>
 
-            <aside className="space-y-4 xl:sticky xl:top-0 xl:flex xl:max-h-screen xl:flex-col xl:overflow-y-auto xl:pr-1">
+            <aside className="space-y-4 xl:sticky xl:top-0 xl:flex xl:max-h-screen xl:flex-col xl:overflow-y-auto xl:pr-2">
               <PrintSettings
                 activeDocument={activeDocument}
                 activeServiceCategory={activeServiceCategory}
@@ -1055,9 +1128,11 @@ export function UploadPage() {
                 </div>
 
                 {successMessage ? (
-                  <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <p>{successMessage.text}</p>
-                    <p className="mt-2 font-bold">Tracking ID: {successMessage.orderId}</p>
+                  <div className="mt-4 rounded-2xl border border-emerald-200/70 bg-white/92 px-4 py-3 text-sm shadow-[0_14px_34px_rgba(16,185,129,0.10)] backdrop-blur">
+                    <p className="font-medium leading-6 text-slate-700">{successMessage.text}</p>
+                    <p className="mt-2 font-bold text-slate-900">
+                      Tracking ID: <span className="break-all text-emerald-700">{successMessage.orderId}</span>
+                    </p>
                   </div>
                 ) : null}
               </div>
@@ -1074,10 +1149,6 @@ export function UploadPage() {
     </>
   );
 }
-
-
-
-
 
 
 

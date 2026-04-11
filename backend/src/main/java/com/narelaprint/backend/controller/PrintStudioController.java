@@ -5,6 +5,7 @@ import com.narelaprint.backend.dto.QuoteRequest;
 import com.narelaprint.backend.dto.QuoteResponse;
 import com.narelaprint.backend.dto.ServiceCatalogResponse;
 import com.narelaprint.backend.dto.ServiceCatalogUpdateRequest;
+import com.narelaprint.backend.dto.ServiceCatalogItemResponse;
 import com.narelaprint.backend.dto.SiteContentResponse;
 import com.narelaprint.backend.dto.SiteContentUpdateRequest;
 import com.narelaprint.backend.dto.TrackOrderRequest;
@@ -67,6 +68,28 @@ public class PrintStudioController {
             return ResponseEntity.ok(serviceCatalogService.updateCatalog(request));
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", exception.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/service-catalog/{code}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadServiceImage(@PathVariable String code, @RequestParam("image") MultipartFile image) {
+        try {
+            ServiceCatalogItemResponse response = serviceCatalogService.updateServiceImage(code, image);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().body(Map.of("error", exception.getMessage()));
+        } catch (IOException exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to store service image."));
+        }
+    }
+
+    @DeleteMapping("/service-catalog/{code}/image")
+    public ResponseEntity<?> removeServiceImage(@PathVariable String code) {
+        try {
+            ServiceCatalogItemResponse response = serviceCatalogService.removeServiceImage(code);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().body(Map.of("error", exception.getMessage()));
         }
     }
 

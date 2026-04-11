@@ -8,6 +8,8 @@ public record ServiceCatalogItemResponse(
         String priceLabel,
         Integer basePrice,
         String unitLabel,
+        String imageName,
+        String imageUrl,
         Boolean featured,
         Boolean active,
         Integer sortOrder

@@ -38,6 +38,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/orders/*").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/site-content").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/service-catalog").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/service-catalog/*/image").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/service-catalog/*/image").authenticated()
                         .anyRequest().permitAll()
                 )
                 .build();

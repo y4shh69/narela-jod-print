@@ -121,7 +121,7 @@ export function TrackOrderPage() {
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-600 shadow-[0_12px_30px_rgba(255,217,90,0.12)]">
-                  <Stars className="h-3.5 w-3.5" />
+                  <Clock className="h-3.5 w-3.5" />
                   Live Order Tracking
                 </div>
               </div>

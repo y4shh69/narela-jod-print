@@ -51,14 +51,14 @@ export function ServicesPage() {
     <>
       <Seo
         title="Services | Printing Shop"
-        description="Explore the full Xerox Wala service catalog and live admin-managed pricing for printing, stationery, cards, gifts, and office materials."
+        description="Explore the full Xerox Wala service catalog ."
       />
       <section className="py-16 sm:py-20">
         <div className="section-shell">
           <SectionHeading
             eyebrow="Service menu"
-            title="Full service catalog with live admin-managed pricing"
-            description="Everything listed here can be priced and updated from the admin panel, from document printing and legal drafts to cards, stationery, calendars, and custom gifts."
+            title="Full service catalog"
+            description=""
           />
 
           {loading ? (
@@ -95,18 +95,40 @@ export function ServicesPage() {
                           viewport={{ once: true }}
                           transition={{ duration: 0.35, delay: index * 0.03 }}
                         >
-                          <div className="service-card flex h-full flex-col justify-between rounded-2xl p-6 transition duration-300 hover:-translate-y-1 hover:scale-[1.01]">
-                            <div>
-                              <div className="flex items-start justify-between gap-3">
-                                <Icon className="h-8 w-8 text-brand-500" />
+                          <div className="service-card group flex h-full flex-col justify-between rounded-2xl p-6 transition duration-300 hover:-translate-y-1 hover:scale-[1.01]">
+                            <div className="space-y-5">
+                              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                                {item.imageUrl ? (
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.title}
+                                    loading="lazy"
+                                    className="h-36 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.12]"
+                                  />
+                                ) : (
+                                  <div className="grid h-36 w-full place-items-center bg-gradient-to-br from-white/10 via-white/5 to-transparent">
+                                    <Icon className="h-10 w-10 text-white/75" />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+
+                                <div className="absolute left-4 top-4 flex items-center gap-3">
+                                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/12 text-white shadow-[0_12px_30px_rgba(0,0,0,0.20)] backdrop-blur">
+                                    <Icon className="h-5 w-5 text-white" />
+                                  </div>
+                                </div>
+
                                 {item.featured ? (
-                                  <span className="rounded-full border border-white/16 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
+                                  <span className="absolute right-4 top-4 rounded-full border border-white/16 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/85 backdrop-blur">
                                     Featured
                                   </span>
                                 ) : null}
                               </div>
-                              <h3 className="mt-5 text-xl font-semibold text-white">{item.title}</h3>
-                              <p className="mt-3 text-sm leading-7 text-white/78">{item.description}</p>
+
+                              <div>
+                                <h3 className="text-xl font-semibold text-white">{item.title}</h3>
+                                <p className="mt-3 text-sm leading-7 text-white/78">{item.description}</p>
+                              </div>
                             </div>
                             <div className="mt-6">
                               <p className="text-lg font-semibold text-white">{item.priceLabel}</p>

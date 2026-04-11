@@ -8,7 +8,10 @@ import com.narelaprint.backend.entity.ServiceCatalogItem;
 import com.narelaprint.backend.repository.ServiceCatalogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 public class ServiceCatalogService {
 
     private final ServiceCatalogRepository serviceCatalogRepository;
+    private final StorageService storageService;
 
     public ServiceCatalogResponse getCatalog() {
         ensureSeeded();
@@ -59,6 +63,15 @@ public class ServiceCatalogService {
             item.setPriceLabel(defaultString(itemRequest.priceLabel(), "From Rs 99"));
             item.setBasePrice(normalizePrice(itemRequest.basePrice(), inferBasePrice(item.getPriceLabel())));
             item.setUnitLabel(defaultString(itemRequest.unitLabel(), "starting price"));
+
+            // Preserve existing photo unless explicitly provided by admin.
+            if (!blank(itemRequest.imageUrl())) {
+                item.setImageUrl(itemRequest.imageUrl().trim());
+            }
+            if (!blank(itemRequest.imageName())) {
+                item.setImageName(itemRequest.imageName().trim());
+            }
+
             item.setFeatured(Boolean.TRUE.equals(itemRequest.featured()));
             item.setActive(itemRequest.active() == null || itemRequest.active());
             item.setSortOrder(itemRequest.sortOrder() == null ? 999 : itemRequest.sortOrder());
@@ -76,6 +89,60 @@ public class ServiceCatalogService {
         return getCatalog();
     }
 
+    @Transactional
+    public ServiceCatalogItemResponse updateServiceImage(String code, MultipartFile image) throws IOException {
+        ensureSeeded();
+        if (blank(code)) {
+            throw new IllegalArgumentException("Service code is required");
+        }
+        if (image == null || image.isEmpty()) {
+            throw new IllegalArgumentException("Image file is required");
+        }
+
+        String normalizedCode = code.trim().toLowerCase(Locale.ROOT);
+        ServiceCatalogItem item = serviceCatalogRepository.findByCode(normalizedCode)
+                .orElseThrow(() -> new IllegalArgumentException("Service not found"));
+
+        String previousUrl = item.getImageUrl();
+        StorageService.StoredFile stored = storageService.store(image);
+        item.setImageName(stored.originalName());
+        item.setImageUrl(stored.publicUrl());
+        ServiceCatalogItem saved = serviceCatalogRepository.save(item);
+
+        // Best-effort removal of old image after new one is saved.
+        if (!blank(previousUrl) && !previousUrl.equals(saved.getImageUrl())) {
+            storageService.deleteByPublicUrl(previousUrl);
+        }
+
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public ServiceCatalogItemResponse removeServiceImage(String code) {
+        ensureSeeded();
+        if (blank(code)) {
+            throw new IllegalArgumentException("Service code is required");
+        }
+
+        String normalizedCode = code.trim().toLowerCase(Locale.ROOT);
+        ServiceCatalogItem item = serviceCatalogRepository.findByCode(normalizedCode)
+                .orElseThrow(() -> new IllegalArgumentException("Service not found"));
+
+        String previousUrl = item.getImageUrl();
+        item.setImageName(null);
+        item.setImageUrl(null);
+        ServiceCatalogItem saved = serviceCatalogRepository.save(item);
+
+        if (!blank(previousUrl)) {
+            try {
+                storageService.deleteByPublicUrl(previousUrl);
+            } catch (IOException ignored) {
+            }
+        }
+
+        return toResponse(saved);
+    }
+
     private ServiceCatalogItemResponse toResponse(ServiceCatalogItem item) {
         return new ServiceCatalogItemResponse(
                 item.getCode(),
@@ -85,6 +152,8 @@ public class ServiceCatalogService {
                 item.getPriceLabel(),
                 normalizePrice(item.getBasePrice(), inferBasePrice(item.getPriceLabel())),
                 item.getUnitLabel(),
+                item.getImageName(),
+                item.getImageUrl(),
                 item.getFeatured(),
                 item.getActive(),
                 item.getSortOrder()
@@ -166,6 +235,8 @@ public class ServiceCatalogService {
         item.setPriceLabel(priceLabel);
         item.setBasePrice(basePrice);
         item.setUnitLabel(unitLabel);
+        item.setImageName(null);
+        item.setImageUrl(null);
         item.setFeatured(featured);
         item.setActive(true);
         item.setSortOrder(sortOrder);
